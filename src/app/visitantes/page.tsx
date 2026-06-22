@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, Save } from "lucide-react";
 import { Badge, Button, Card, EmptyState, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { visitorOriginLabels, visitorStatusLabels } from "@/lib/labels";
 import type { Person, VisitorOrigin, VisitorStatus } from "@/lib/types";
@@ -15,8 +15,8 @@ export default function VisitorsPage() {
   const [form, setForm] = useState(emptyForm);
 
   async function loadVisitors() {
-    if (!supabase) return;
-    const { data } = await supabase.from("people").select("*").eq("status", "visitante").order("created_at", { ascending: false });
+    if (!supabase || !membrosDb) return;
+    const { data } = await membrosDb.from("people").select("*").eq("status", "visitante").order("created_at", { ascending: false });
     setVisitors((data ?? []) as Person[]);
   }
 
@@ -24,15 +24,15 @@ export default function VisitorsPage() {
 
   async function saveVisitor(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    await supabase.from("people").insert({ ...form, status: "visitante", notes: form.notes || null });
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("people").insert({ ...form, status: "visitante", notes: form.notes || null });
     setForm(emptyForm);
     loadVisitors();
   }
 
   async function updateStatus(id: string, visitor_status: VisitorStatus) {
-    if (!supabase) return;
-    await supabase.from("people").update({ visitor_status }).eq("id", id);
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("people").update({ visitor_status }).eq("id", id);
     loadVisitors();
   }
 

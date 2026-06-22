@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Badge, Button, Card, PageHeader, PageShell } from "@/components/ui";
 import { formatDate } from "@/lib/date";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { departmentLeaders } from "@/lib/department-leaders";
@@ -31,9 +31,9 @@ export default function SegmentPage({ params }: PageProps) {
 
   useEffect(() => {
     async function loadPeople() {
-      if (!supabase || !name) return;
+      if (!supabase || !membrosDb || !name) return;
       const accessContext = await getAccessContext();
-      const { data } = await supabase.from("people").select("*").order("name");
+      const { data } = await membrosDb.from("people").select("*").order("name");
       const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
       setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell, Badge } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { formatDate } from "@/lib/date";
 import { taskStatusLabels, taskTypeLabels } from "@/lib/labels";
 import type { PastoralTask, Person, TaskType } from "@/lib/types";
@@ -13,10 +13,10 @@ export default function TasksPage() {
   const [form, setForm] = useState({ title: "", person_id: "", type: "ligar" as TaskType, responsible: "", due_date: "", notes: "" });
 
   async function load() {
-    if (!supabase) return;
+    if (!supabase || !membrosDb) return;
     const [taskResult, peopleResult] = await Promise.all([
-      supabase.from("pastoral_tasks").select("*, people(name, phone)").order("status").order("due_date"),
-      supabase.from("people").select("*").order("name")
+      membrosDb.from("pastoral_tasks").select("*, people(name, phone)").order("status").order("due_date"),
+      membrosDb.from("people").select("*").order("name")
     ]);
     setTasks((taskResult.data ?? []) as PastoralTask[]);
     setPeople((peopleResult.data ?? []) as Person[]);
@@ -26,15 +26,15 @@ export default function TasksPage() {
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    await supabase.from("pastoral_tasks").insert({ ...form, person_id: form.person_id || null, due_date: form.due_date || null, responsible: form.responsible || null, notes: form.notes || null });
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("pastoral_tasks").insert({ ...form, person_id: form.person_id || null, due_date: form.due_date || null, responsible: form.responsible || null, notes: form.notes || null });
     setForm({ title: "", person_id: "", type: "ligar", responsible: "", due_date: "", notes: "" });
     load();
   }
 
   async function toggle(task: PastoralTask) {
-    if (!supabase) return;
-    await supabase.from("pastoral_tasks").update({ status: task.status === "pendente" ? "concluido" : "pendente" }).eq("id", task.id);
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("pastoral_tasks").update({ status: task.status === "pendente" ? "concluido" : "pendente" }).eq("id", task.id);
     load();
   }
 

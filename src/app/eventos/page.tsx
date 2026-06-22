@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { formatDate } from "@/lib/date";
 import type { Attendance, ChurchEvent, Person } from "@/lib/types";
 
@@ -14,11 +14,11 @@ export default function EventsPage() {
   const [form, setForm] = useState({ name: "", event_date: "", location: "", notes: "" });
 
   async function load() {
-    if (!supabase) return;
+    if (!supabase || !membrosDb) return;
     const [eventResult, peopleResult, attendanceResult] = await Promise.all([
-      supabase.from("events").select("*").order("event_date", { ascending: false }),
-      supabase.from("people").select("*").order("name"),
-      supabase.from("attendance").select("*, people(name, status), events(name, event_date)")
+      membrosDb.from("events").select("*").order("event_date", { ascending: false }),
+      membrosDb.from("people").select("*").order("name"),
+      membrosDb.from("attendance").select("*, people(name, status), events(name, event_date)")
     ]);
     setEvents((eventResult.data ?? []) as ChurchEvent[]);
     setPeople((peopleResult.data ?? []) as Person[]);
@@ -29,15 +29,15 @@ export default function EventsPage() {
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    await supabase.from("events").insert({ ...form, location: form.location || null, notes: form.notes || null });
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("events").insert({ ...form, location: form.location || null, notes: form.notes || null });
     setForm({ name: "", event_date: "", location: "", notes: "" });
     load();
   }
 
   async function mark(personId: string, present: boolean) {
-    if (!supabase || !selectedEvent) return;
-    await supabase.from("attendance").upsert({ event_id: selectedEvent, person_id: personId, present }, { onConflict: "event_id,person_id" });
+    if (!supabase || !membrosDb || !selectedEvent) return;
+    await membrosDb.from("attendance").upsert({ event_id: selectedEvent, person_id: personId, present }, { onConflict: "event_id,person_id" });
     load();
   }
 

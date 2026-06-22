@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge, Card, PageHeader, PageShell } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
@@ -14,11 +14,11 @@ export default function ReportsPage() {
 
   useEffect(() => {
     async function loadReports() {
-      if (!supabase) return;
+      if (!supabase || !membrosDb) return;
       const accessContext = await getAccessContext();
       const [peopleResult, tasksResult] = await Promise.all([
-        supabase.from("people").select("*").order("created_at", { ascending: false }),
-        supabase.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date")
+        membrosDb.from("people").select("*").order("created_at", { ascending: false }),
+        membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date")
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
       setTasks((tasksResult.data ?? []) as PastoralTask[]);

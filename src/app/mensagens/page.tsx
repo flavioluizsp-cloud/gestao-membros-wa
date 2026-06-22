@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { templateLabels } from "@/lib/labels";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl, renderTemplate } from "@/lib/whatsapp";
 import type { Interaction, MessageTemplate, Person, TemplateKey } from "@/lib/types";
 
@@ -17,10 +17,10 @@ export default function MessagesPage() {
   const person = people.find((p) => p.id === personId);
 
   async function load() {
-    if (!supabase) return;
+    if (!supabase || !membrosDb) return;
     const [templateResult, peopleResult] = await Promise.all([
-      supabase.from("message_templates").select("*").order("name"),
-      supabase.from("people").select("*").order("name")
+      membrosDb.from("message_templates").select("*").order("name"),
+      membrosDb.from("people").select("*").order("name")
     ]);
     setTemplates((templateResult.data ?? []) as MessageTemplate[]);
     setPeople((peopleResult.data ?? []) as Person[]);
@@ -35,15 +35,15 @@ export default function MessagesPage() {
   }
 
   async function saveTemplate() {
-    if (!supabase || !templateId) return;
-    await supabase.from("message_templates").update({ body }).eq("id", templateId);
+    if (!supabase || !membrosDb || !templateId) return;
+    await membrosDb.from("message_templates").update({ body }).eq("id", templateId);
     load();
   }
 
   async function registerSent() {
-    if (!supabase || !person) return;
-    await supabase.from("interactions").insert({ person_id: person.id, type: "whatsapp", notes: body });
-    await supabase.from("people").update({ last_contact_at: new Date().toISOString() }).eq("id", person.id);
+    if (!supabase || !membrosDb || !person) return;
+    await membrosDb.from("interactions").insert({ person_id: person.id, type: "whatsapp", notes: body });
+    await membrosDb.from("people").update({ last_contact_at: new Date().toISOString() }).eq("id", person.id);
   }
 
   const rendered = person ? renderTemplate(body, { nome: person.name, telefone: person.phone }) : body;

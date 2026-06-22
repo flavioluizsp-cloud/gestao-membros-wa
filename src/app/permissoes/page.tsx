@@ -5,7 +5,7 @@ import { Save, Trash2 } from "lucide-react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell, Badge } from "@/components/ui";
 import { departmentOptions, familyGroupOptions } from "@/lib/labels";
 import { getAccessContext } from "@/lib/access";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import type { AccessContext, Person, ScopeType, UserProfile, UserRole, UserScope } from "@/lib/types";
 
 const roleLabels: Record<UserRole, string> = {
@@ -25,13 +25,13 @@ export default function PermissionsPage() {
   const [message, setMessage] = useState("");
 
   async function load() {
-    if (!supabase) return;
+    if (!supabase || !membrosDb) return;
     const accessContext = await getAccessContext();
     setAccess(accessContext);
     const [peopleResult, profilesResult, scopesResult] = await Promise.all([
-      supabase.from("people").select("*").order("name"),
-      supabase.from("user_profiles").select("*, people(id, name, phone)").order("created_at", { ascending: false }),
-      supabase.from("user_scopes").select("*").order("created_at", { ascending: false })
+      membrosDb.from("people").select("*").order("name"),
+      membrosDb.from("user_profiles").select("*, people(id, name, phone)").order("created_at", { ascending: false }),
+      membrosDb.from("user_scopes").select("*").order("created_at", { ascending: false })
     ]);
     setPeople((peopleResult.data ?? []) as Person[]);
     setProfiles((profilesResult.data ?? []) as UserProfile[]);
@@ -44,8 +44,8 @@ export default function PermissionsPage() {
 
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    const { error } = await supabase.from("user_profiles").upsert({
+    if (!supabase || !membrosDb) return;
+    const { error } = await membrosDb.from("user_profiles").upsert({
       auth_user_id: form.auth_user_id,
       person_id: form.person_id || null,
       role: form.role,
@@ -58,22 +58,22 @@ export default function PermissionsPage() {
 
   async function saveScope(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    const { error } = await supabase.from("user_scopes").upsert(scopeForm, { onConflict: "user_profile_id,scope_type,scope_value" });
+    if (!supabase || !membrosDb) return;
+    const { error } = await membrosDb.from("user_scopes").upsert(scopeForm, { onConflict: "user_profile_id,scope_type,scope_value" });
     setMessage(error ? error.message : "Escopo salvo.");
     if (!error) setScopeForm({ user_profile_id: "", scope_type: "grupo_familiar", scope_value: "" });
     load();
   }
 
   async function removeScope(id: string) {
-    if (!supabase) return;
-    await supabase.from("user_scopes").delete().eq("id", id);
+    if (!supabase || !membrosDb) return;
+    await membrosDb.from("user_scopes").delete().eq("id", id);
     load();
   }
 
   async function removeProfile(id: string) {
-    if (!supabase || !window.confirm("Excluir esta permissao?")) return;
-    await supabase.from("user_profiles").delete().eq("id", id);
+    if (!supabase || !membrosDb || !window.confirm("Excluir esta permissao?")) return;
+    await membrosDb.from("user_profiles").delete().eq("id", id);
     load();
   }
 

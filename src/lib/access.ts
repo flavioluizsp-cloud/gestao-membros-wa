@@ -1,14 +1,14 @@
-import { supabase } from "./supabase";
+import { membrosDb, supabase } from "./supabase";
 import type { AccessContext, Person, UserProfile, UserScope } from "./types";
 
 export async function getAccessContext(): Promise<AccessContext> {
-  if (!supabase) return emptyAccess();
+  if (!supabase || !membrosDb) return emptyAccess();
 
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
   if (!user) return emptyAccess();
 
-  const { data: profileData } = await supabase
+  const { data: profileData } = await membrosDb
     .from("user_profiles")
     .select("*, people(id, name, phone)")
     .eq("auth_user_id", user.id)
@@ -29,8 +29,8 @@ export async function getAccessContext(): Promise<AccessContext> {
   }
 
   const [{ data: scopesData }, { data: personData }] = await Promise.all([
-    supabase.from("user_scopes").select("*").eq("user_profile_id", profile.id),
-    profile.person_id ? supabase.from("people").select("*").eq("id", profile.person_id).maybeSingle() : Promise.resolve({ data: null })
+    membrosDb.from("user_scopes").select("*").eq("user_profile_id", profile.id),
+    profile.person_id ? membrosDb.from("people").select("*").eq("id", profile.person_id).maybeSingle() : Promise.resolve({ data: null })
   ]);
 
   const scopes = (scopesData ?? []) as UserScope[];

@@ -8,3 +8,5 @@ export const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey);
 export const supabase = hasSupabaseEnv
   ? createClient(supabaseUrl!, supabaseAnonKey!)
   : null;
+
+export const membrosDb = supabase?.schema("membros") ?? null;

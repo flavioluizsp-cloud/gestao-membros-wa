@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Pencil, Save, X } from "lucide-react";
 import { Badge, Button, Card, EmptyState, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ecclesiasticalRoleOptions, familyGroupOptions, personStatusLabels } from "@/lib/labels";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { formatDate } from "@/lib/date";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
@@ -65,9 +65,9 @@ export default function PeoplePage() {
   const messageTimeout = useRef<number | null>(null);
 
   async function loadPeople() {
-    if (!supabase) return;
+    if (!supabase || !membrosDb) return;
     const accessContext = await getAccessContext();
-    const { data } = await supabase.from("people").select("*").order("created_at", { ascending: false });
+    const { data } = await membrosDb.from("people").select("*").order("created_at", { ascending: false });
     setAccess(accessContext);
     setPeople(filterPeopleByAccess((data ?? []) as Person[], accessContext));
   }
@@ -78,7 +78,7 @@ export default function PeoplePage() {
 
   async function savePerson(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase) {
+    if (!supabase || !membrosDb) {
       setMessageType("error");
       setMessage("Configure as variaveis do Supabase primeiro.");
       showTemporaryMessage("Configure as variaveis do Supabase primeiro.", "error");
@@ -106,10 +106,10 @@ export default function PeoplePage() {
     };
     let error;
     if (editingId) {
-      const result = await supabase.from("people").update(payload).eq("id", editingId);
+      const result = await membrosDb.from("people").update(payload).eq("id", editingId);
       error = result.error;
     } else {
-      const result = await supabase.from("people").insert(payload);
+      const result = await membrosDb.from("people").insert(payload);
       error = result.error;
     }
     if (error) {
@@ -161,11 +161,11 @@ export default function PeoplePage() {
   }
 
   async function removePerson(id: string) {
-    if (!supabase || !access?.isAdminLike) return;
+    if (!supabase || !membrosDb || !access?.isAdminLike) return;
     const person = people.find((item) => item.id === id);
     const confirmed = window.confirm(`Tem certeza que deseja excluir ${person?.name ?? "esta pessoa"}?`);
     if (!confirmed) return;
-    await supabase.from("people").delete().eq("id", id);
+    await membrosDb.from("people").delete().eq("id", id);
     loadPeople();
   }
 

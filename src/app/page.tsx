@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarDays, CheckSquare, HeartHandshake, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { departmentLeaders } from "@/lib/department-leaders";
@@ -25,12 +25,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboardData() {
-      if (!supabase) return;
+      if (!supabase || !membrosDb) return;
       const accessContext = await getAccessContext();
       const [peopleResult, tasksResult, eventsResult] = await Promise.all([
-        supabase.from("people").select("*").order("created_at", { ascending: false }),
-        supabase.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
-        supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6)
+        membrosDb.from("people").select("*").order("created_at", { ascending: false }),
+        membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
+        membrosDb.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6)
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
       setTasks((tasksResult.data ?? []) as PastoralTask[]);
