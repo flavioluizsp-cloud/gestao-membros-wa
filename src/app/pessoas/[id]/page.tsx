@@ -50,6 +50,8 @@ const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
 
 const relationshipOptions = ["Conjuge", "Filho(a)", "Pai", "Mae", "Irmao(a)", "Outro"];
 
+const emptyMember: FamilyMember = { name: "", relationship: "Filho(a)", birth_date: "" };
+
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
@@ -79,6 +81,13 @@ function normalizeFamilyMembers(members: FamilyMember[]) {
     .filter((member) => member.name.trim() || member.relationship.trim() || member.birth_date.trim());
 }
 
+function formatDateBR(dateStr: string) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  if (!day) return "";
+  return `${day}/${month}/${year}`;
+}
+
 export default function PersonProfilePage({ params }: PageProps) {
   const [id, setId] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
@@ -86,6 +95,8 @@ export default function PersonProfilePage({ params }: PageProps) {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const [showFamilyForm, setShowFamilyForm] = useState(false);
+  const [newMember, setNewMember] = useState<FamilyMember>(emptyMember);
   const messageTimeout = useRef<number | null>(null);
   const isNew = id === "novo";
   const canManageRestricted = Boolean(access?.isAdminLike);
@@ -198,19 +209,15 @@ export default function PersonProfilePage({ params }: PageProps) {
     window.location.href = "/pessoas";
   }
 
-  function updateFamilyMember(index: number, field: keyof FamilyMember, value: string) {
-    setForm({
-      ...form,
-      family_members: form.family_members.map((member, currentIndex) => currentIndex === index ? { ...member, [field]: value } : member)
-    });
-  }
-
-  function addFamilyMember() {
-    setForm({ ...form, family_members: [...form.family_members, { name: "", relationship: "Filho(a)", birth_date: "" }] });
+  function confirmNewMember() {
+    if (!newMember.name.trim()) return;
+    setForm({ ...form, family_members: [...form.family_members, newMember] });
+    setNewMember(emptyMember);
+    setShowFamilyForm(false);
   }
 
   function removeFamilyMember(index: number) {
-    setForm({ ...form, family_members: form.family_members.filter((_, currentIndex) => currentIndex !== index) });
+    setForm({ ...form, family_members: form.family_members.filter((_, i) => i !== index) });
   }
 
   return (
@@ -247,45 +254,80 @@ export default function PersonProfilePage({ params }: PageProps) {
           </div>
 
           <div className="mt-4 rounded-md border border-line p-3 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h4 className="font-semibold text-ink">Dados da familia</h4>
-                <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a esta pessoa.</p>
-              </div>
-            </div>
+            <h4 className="font-semibold text-ink">Dados da familia</h4>
+            <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a esta pessoa.</p>
 
-            <div className="mt-3 space-y-2">
-              {form.family_members.map((member, index) => (
-                <div key={index} className="grid gap-2 rounded-md border border-line bg-white p-2 sm:p-3 md:grid-cols-[1fr_170px_160px_auto]">
-                  <Field label={`Nome ${index + 1}`}>
-                    <input className={inputClass} value={member.name} onChange={(e) => updateFamilyMember(index, "name", e.target.value)} />
+            {/* Cards dos familiares já salvos */}
+            {form.family_members.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {form.family_members.map((member, index) => (
+                  <div key={index} className="flex items-center justify-between rounded-md border border-line bg-white px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-ink">{member.name}</p>
+                      <p className="text-xs text-ink/60">
+                        {member.relationship}{member.birth_date ? ` · ${formatDateBR(member.birth_date)}` : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFamilyMember(index)}
+                      className="ml-3 shrink-0 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulário inline de novo familiar */}
+            {showFamilyForm ? (
+              <div className="mt-3 rounded-md border border-line bg-sage p-3">
+                <div className="grid gap-3 md:grid-cols-[1fr_170px_160px]">
+                  <Field label="Nome">
+                    <input
+                      className={inputClass}
+                      value={newMember.name}
+                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      placeholder="Nome do familiar"
+                      autoFocus
+                    />
                   </Field>
                   <Field label="Parentesco">
-                    <select className={inputClass} value={member.relationship} onChange={(e) => updateFamilyMember(index, "relationship", e.target.value)}>
+                    <select className={inputClass} value={newMember.relationship} onChange={(e) => setNewMember({ ...newMember, relationship: e.target.value })}>
                       {relationshipOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                     </select>
                   </Field>
                   <Field label="Data nascimento">
-                    <input className={inputClass} type="date" value={member.birth_date ?? ""} onChange={(e) => updateFamilyMember(index, "birth_date", e.target.value)} />
+                    <input className={inputClass} type="date" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} />
                   </Field>
-                  <button type="button" onClick={() => removeFamilyMember(index)} className="mt-6 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">
-                    Remover
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={confirmNewMember}
+                    className="rounded-md bg-moss px-4 py-2 text-sm font-semibold text-white hover:bg-moss/90"
+                  >
+                    Confirmar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowFamilyForm(false); setNewMember(emptyMember); }}
+                    className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-white"
+                  >
+                    Cancelar
                   </button>
                 </div>
-              ))}
-              {form.family_members.length === 0 ? (
-                <div className="rounded-md bg-sage px-3 py-4 text-center">
-                  <p className="text-sm text-ink/65">Nenhum familiar cadastrado.</p>
-                  <button type="button" onClick={addFamilyMember} className="mt-3 w-full rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-ink shadow-sm hover:bg-white/80">
-                    Adicionar primeiro familiar
-                  </button>
-                </div>
-              ) : (
-                <button type="button" onClick={addFamilyMember} className="w-full rounded-md border border-line bg-sage px-3 py-2.5 text-sm font-semibold text-ink hover:bg-sage/80">
-                  Adicionar outro familiar
-                </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowFamilyForm(true)}
+                className="mt-3 w-full rounded-md border border-line bg-sage px-3 py-2.5 text-sm font-semibold text-ink hover:bg-sage/80"
+              >
+                {form.family_members.length === 0 ? "Adicionar primeiro familiar" : "Adicionar outro familiar"}
+              </button>
+            )}
           </div>
         </Card>
 
