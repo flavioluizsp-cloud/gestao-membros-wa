@@ -252,9 +252,6 @@ export default function PersonProfilePage({ params }: PageProps) {
                 <h4 className="font-semibold text-ink">Dados da familia</h4>
                 <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a esta pessoa.</p>
               </div>
-              <button type="button" onClick={addFamilyMember} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink hover:bg-sage">
-                Inserir familiar
-              </button>
             </div>
 
             <div className="mt-3 space-y-2">
@@ -276,7 +273,18 @@ export default function PersonProfilePage({ params }: PageProps) {
                   </button>
                 </div>
               ))}
-              {form.family_members.length === 0 ? <p className="rounded-md bg-sage px-3 py-2 text-sm text-ink/65">Nenhum familiar cadastrado.</p> : null}
+              {form.family_members.length === 0 ? (
+                <div className="rounded-md bg-sage px-3 py-4 text-center">
+                  <p className="text-sm text-ink/65">Nenhum familiar cadastrado.</p>
+                  <button type="button" onClick={addFamilyMember} className="mt-3 w-full rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-ink shadow-sm hover:bg-white/80">
+                    Adicionar primeiro familiar
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={addFamilyMember} className="w-full rounded-md border border-line bg-sage px-3 py-2.5 text-sm font-semibold text-ink hover:bg-sage/80">
+                  Adicionar outro familiar
+                </button>
+              )}
             </div>
           </div>
         </Card>
