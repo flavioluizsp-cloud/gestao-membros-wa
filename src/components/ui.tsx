@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { clsx } from "clsx";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { AuthButton } from "./auth-button";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nav = [
     ["Dashboard", "/"],
     ["Pessoas", "/pessoas"],
@@ -31,15 +36,39 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         <AuthButton />
       </aside>
       <main className="lg:pl-64">
-        <div className="border-b border-line bg-white px-4 py-3 lg:hidden">
-          <p className="font-bold text-ink">Gestao Membros WA</p>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {nav.map(([label, href]) => (
-              <Link key={href} href={href} className="whitespace-nowrap rounded-md border border-line px-3 py-1.5 text-sm">
-                {label}
-              </Link>
-            ))}
+        <div className="sticky top-0 z-30 border-b border-line bg-white px-4 py-3 shadow-sm lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-moss">Igreja CRM</p>
+              <p className="font-bold text-ink">Gestao Membros WA</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              Menu
+            </button>
           </div>
+
+          {mobileMenuOpen ? (
+            <nav id="mobile-menu" className="mt-3 grid gap-2 border-t border-line pt-3">
+              {nav.map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-md border border-line px-3 py-2.5 text-sm font-medium text-ink hover:bg-sage"
+                >
+                  {label}
+                </Link>
+              ))}
+              <AuthButton />
+            </nav>
+          ) : null}
         </div>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
