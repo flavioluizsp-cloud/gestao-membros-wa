@@ -231,14 +231,6 @@ export default function PersonProfilePage({ params }: PageProps) {
               </select>
             </Field>
             <Field label="Lider do Grupo Familiar"><input className={inputClass} value={getFamilyGroupLeader(form.family_group) || "Sem lider definido"} readOnly /></Field>
-            {canManageRestricted ? (
-              <Field label="Atribuicao">
-                <select className={inputClass} value={form.assigned_leader} onChange={(e) => setForm({ ...form, assigned_leader: e.target.value })}>
-                  <option value="">Sem atribuicao</option>
-                  {people.map((person) => <option key={person.id} value={person.name}>{person.name}</option>)}
-                </select>
-              </Field>
-            ) : null}
             <Field label="Observacoes"><textarea className={inputClass} rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
           </div>
         </Card>
@@ -260,6 +252,12 @@ export default function PersonProfilePage({ params }: PageProps) {
               </Field>
               <Field label="Cargo no departamento">
                 <CheckboxGroup options={departmentRoleOptions} values={form.department_roles} onChange={(values) => setForm({ ...form, department_roles: values })} />
+              </Field>
+              <Field label="Atribuicao">
+                <select className={inputClass} value={form.assigned_leader} onChange={(e) => setForm({ ...form, assigned_leader: e.target.value })}>
+                  <option value="">Sem atribuicao</option>
+                  {people.map((person) => <option key={person.id} value={person.name}>{person.name}</option>)}
+                </select>
               </Field>
             </div>
           </Card>
