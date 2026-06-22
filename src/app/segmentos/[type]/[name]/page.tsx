@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
+import { departmentLeaders } from "@/lib/department-leaders";
 import type { Person } from "@/lib/types";
 
 type PageProps = {
@@ -148,6 +149,7 @@ function belongsToSegment(person: Person, type: string, name: string) {
 function findLeader(type: string, name: string, people: Person[]) {
   if (type === "grupo-familiar") return people.find((person) => person.family_group === name)?.family_group_leader ?? "Sem lider definido";
   if (type === "atribuicao") return name;
+  if (type === "departamento" && departmentLeaders[name]) return departmentLeaders[name];
   const leader = people.find((person) => person.department_roles?.includes("Lider"));
   const coLeader = people.find((person) => person.department_roles?.includes("Co-Lider"));
   if (leader && coLeader) return `${leader.name} / ${coLeader.name}`;

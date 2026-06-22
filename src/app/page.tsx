@@ -8,6 +8,7 @@ import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui"
 import { supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
+import { departmentLeaders } from "@/lib/department-leaders";
 import type { ChurchEvent, PastoralTask, Person } from "@/lib/types";
 
 type Segment = {
@@ -125,6 +126,8 @@ export default function DashboardPage() {
 }
 
 function findSegmentLeader(members: Person[]) {
+  const department = members.flatMap((person) => person.departments ?? []).find((name) => departmentLeaders[name]);
+  if (department) return departmentLeaders[department];
   const leader = members.find((person) => person.department_roles?.includes("Lider"));
   const coLeader = members.find((person) => person.department_roles?.includes("Co-Lider"));
   if (leader && coLeader) return `${leader.name} / ${coLeader.name}`;

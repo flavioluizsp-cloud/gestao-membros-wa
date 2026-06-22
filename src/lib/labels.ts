@@ -52,6 +52,7 @@ export const ecclesiasticalRoleOptions = ["Pastor", "Presbitero", "Diacono"];
 export const departmentRoleOptions = ["Lider", "Co-Lider"];
 
 export const departmentOptions = [
+  "Pastoral",
   "Louvor",
   "Escola Biblica",
   "Acao Social",
