@@ -6,6 +6,13 @@ export type TaskStatus = "pendente" | "concluido";
 export type TemplateKey = "boas_vindas" | "aniversario" | "convite_culto" | "acompanhamento" | "afastados";
 export type UserRole = "admin" | "pastor" | "lider" | "membro";
 export type ScopeType = "grupo_familiar" | "departamento";
+export type MaritalStatus = "solteiro" | "casado" | "uniao_estavel" | "juntos_sem_casar" | "";
+
+export type FamilyMember = {
+  name: string;
+  relationship: string;
+  birth_year: string;
+};
 
 export type Person = {
   id: string;
@@ -16,6 +23,8 @@ export type Person = {
   birth_date: string | null;
   hide_birth_year: boolean;
   birth_city: string | null;
+  marital_status: MaritalStatus | null;
+  family_members: FamilyMember[] | null;
   status: PersonStatus;
   notes: string | null;
   last_contact_at: string | null;

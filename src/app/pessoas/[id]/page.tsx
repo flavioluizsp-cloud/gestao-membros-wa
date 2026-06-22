@@ -7,7 +7,7 @@ import { Button, Card, Field, inputClass, PageHeader, PageShell } from "@/compon
 import { getAccessContext } from "@/lib/access";
 import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ecclesiasticalRoleOptions, familyGroupOptions, personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
-import type { AccessContext, Person, PersonStatus } from "@/lib/types";
+import type { AccessContext, FamilyMember, MaritalStatus, Person, PersonStatus } from "@/lib/types";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -21,6 +21,8 @@ const emptyForm = {
   birth_date: "",
   hide_birth_year: false,
   birth_city: "",
+  marital_status: "" as MaritalStatus,
+  family_members: [] as FamilyMember[],
   status: "visitante" as PersonStatus,
   is_baptized: false,
   baptism_date: "",
@@ -37,6 +39,16 @@ const emptyForm = {
   notes: "",
   last_contact_at: ""
 };
+
+const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
+  { value: "", label: "Nao informado" },
+  { value: "solteiro", label: "Solteiro" },
+  { value: "casado", label: "Casado" },
+  { value: "uniao_estavel", label: "Uniao estavel" },
+  { value: "juntos_sem_casar", label: "Juntos sem casar" }
+];
+
+const relationshipOptions = ["Conjuge", "Filho(a)", "Pai", "Mae", "Irmao(a)", "Outro"];
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -59,6 +71,10 @@ function getFamilyGroupLeader(group: string) {
   const selected = familyGroupOptions.find((option) => option.value === group);
   if (!selected?.leader) return "";
   return selected.coLeader ? `${selected.leader} / ${selected.coLeader}` : selected.leader;
+}
+
+function normalizeFamilyMembers(members: FamilyMember[]) {
+  return members.filter((member) => member.name.trim() || member.relationship.trim() || member.birth_year.trim());
 }
 
 export default function PersonProfilePage({ params }: PageProps) {
@@ -95,6 +111,8 @@ export default function PersonProfilePage({ params }: PageProps) {
         birth_date: person.birth_date ?? "",
         hide_birth_year: Boolean(person.hide_birth_year),
         birth_city: person.birth_city ?? "",
+        marital_status: person.marital_status ?? "",
+        family_members: person.family_members ?? [],
         status: person.status,
         is_baptized: Boolean(person.is_baptized),
         baptism_date: person.baptism_date ?? "",
@@ -134,6 +152,8 @@ export default function PersonProfilePage({ params }: PageProps) {
       birth_date: form.birth_date || null,
       hide_birth_year: form.hide_birth_year,
       birth_city: form.birth_city || null,
+      marital_status: form.marital_status || null,
+      family_members: normalizeFamilyMembers(form.family_members),
       is_baptized: form.is_baptized,
       baptism_date: form.baptism_date || null,
       baptism_church: form.baptism_church || null,
@@ -172,6 +192,21 @@ export default function PersonProfilePage({ params }: PageProps) {
     window.location.href = "/pessoas";
   }
 
+  function updateFamilyMember(index: number, field: keyof FamilyMember, value: string) {
+    setForm({
+      ...form,
+      family_members: form.family_members.map((member, currentIndex) => currentIndex === index ? { ...member, [field]: value } : member)
+    });
+  }
+
+  function addFamilyMember() {
+    setForm({ ...form, family_members: [...form.family_members, { name: "", relationship: "Filho(a)", birth_year: "" }] });
+  }
+
+  function removeFamilyMember(index: number) {
+    setForm({ ...form, family_members: form.family_members.filter((_, currentIndex) => currentIndex !== index) });
+  }
+
   return (
     <PageShell>
       <PageHeader
@@ -198,6 +233,45 @@ export default function PersonProfilePage({ params }: PageProps) {
               Ocultar somente o ano de nascimento
             </label>
             <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
+            <Field label="Situacao conjugal">
+              <select className={inputClass} value={form.marital_status} onChange={(e) => setForm({ ...form, marital_status: e.target.value as MaritalStatus })}>
+                {maritalStatusOptions.map((option) => <option key={option.value || "empty"} value={option.value}>{option.label}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <div className="mt-5 rounded-md border border-line p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="font-semibold text-ink">Dados da familia</h4>
+                <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a esta pessoa.</p>
+              </div>
+              <button type="button" onClick={addFamilyMember} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink hover:bg-sage">
+                Inserir familiar
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {form.family_members.map((member, index) => (
+                <div key={index} className="grid gap-3 rounded-md border border-line bg-white p-3 md:grid-cols-[1fr_170px_140px_auto]">
+                  <Field label={`Nome ${index + 1}`}>
+                    <input className={inputClass} value={member.name} onChange={(e) => updateFamilyMember(index, "name", e.target.value)} />
+                  </Field>
+                  <Field label="Parentesco">
+                    <select className={inputClass} value={member.relationship} onChange={(e) => updateFamilyMember(index, "relationship", e.target.value)}>
+                      {relationshipOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Ano nascimento">
+                    <input className={inputClass} inputMode="numeric" maxLength={4} placeholder="Ex.: 2012" value={member.birth_year} onChange={(e) => updateFamilyMember(index, "birth_year", e.target.value.replace(/\D/g, "").slice(0, 4))} />
+                  </Field>
+                  <button type="button" onClick={() => removeFamilyMember(index)} className="mt-6 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">
+                    Remover
+                  </button>
+                </div>
+              ))}
+              {form.family_members.length === 0 ? <p className="rounded-md bg-sage px-3 py-2 text-sm text-ink/65">Nenhum familiar cadastrado.</p> : null}
+            </div>
           </div>
         </Card>
 
