@@ -240,11 +240,13 @@ export default function PersonProfilePage({ params }: PageProps) {
             <Field label="Como deseja ser chamado"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
             <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="E-mail"><input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-            <Field label="Data de nascimento"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
-            <label className="mt-6 flex h-[42px] items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
-              <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
-              Ocultar somente o ano de nascimento
-            </label>
+            <div className="col-span-2 grid grid-cols-[1fr_auto] gap-3 items-end">
+              <Field label="Data de nascimento"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
+              <label className="flex h-[42px] items-center gap-2 rounded-md border border-line px-3 py-2 text-sm whitespace-nowrap">
+                <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
+                Ocultar somente o ano de nascimento
+              </label>
+            </div>
             <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
             <Field label="Situacao conjugal">
               <select className={inputClass} value={form.marital_status} onChange={(e) => setForm({ ...form, marital_status: e.target.value as MaritalStatus })}>
