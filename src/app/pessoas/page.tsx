@@ -7,7 +7,8 @@ import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ec
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/lib/date";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import type { Person, PersonStatus } from "@/lib/types";
+import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
+import type { AccessContext, Person, PersonStatus } from "@/lib/types";
 
 const emptyForm = {
   name: "",
@@ -60,12 +61,15 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const [access, setAccess] = useState<AccessContext | null>(null);
   const messageTimeout = useRef<number | null>(null);
 
   async function loadPeople() {
     if (!supabase) return;
+    const accessContext = await getAccessContext();
     const { data } = await supabase.from("people").select("*").order("created_at", { ascending: false });
-    setPeople((data ?? []) as Person[]);
+    setAccess(accessContext);
+    setPeople(filterPeopleByAccess((data ?? []) as Person[], accessContext));
   }
 
   useEffect(() => {
@@ -157,7 +161,7 @@ export default function PeoplePage() {
   }
 
   async function removePerson(id: string) {
-    if (!supabase) return;
+    if (!supabase || !access?.isAdminLike) return;
     const person = people.find((item) => item.id === id);
     const confirmed = window.confirm(`Tem certeza que deseja excluir ${person?.name ?? "esta pessoa"}?`);
     if (!confirmed) return;
@@ -267,7 +271,9 @@ export default function PeoplePage() {
             </Field>
             <Field label="Ultimo contato"><input className={inputClass} type="date" value={form.last_contact_at} onChange={(e) => setForm({ ...form, last_contact_at: e.target.value })} /></Field>
             <Field label="Observacoes"><textarea className={inputClass} rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
-            <Button disabled={loading} className="w-full gap-2"><Save className="h-4 w-4" />{editingId ? "Salvar alteracoes" : "Salvar pessoa"}</Button>
+            {(access?.isAdminLike || access?.isLeader || access?.isMember) ? (
+              <Button disabled={loading} className="w-full gap-2"><Save className="h-4 w-4" />{editingId ? "Salvar alteracoes" : "Salvar pessoa"}</Button>
+            ) : null}
           </form>
         </Card>
         <div className="space-y-3">
@@ -312,7 +318,7 @@ export default function PeoplePage() {
                 <div className="flex gap-2">
                   <a className="inline-flex rounded-md border border-line p-2 text-moss hover:bg-sage" href={buildWhatsAppUrl(person.phone, `Ola ${person.name}, paz!`)} target="_blank"><MessageCircle className="h-4 w-4" /></a>
                   <button className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm" onClick={() => startEditing(person)}><Pencil className="h-4 w-4" />Editar</button>
-                  <button className="rounded-md border border-line px-3 py-2 text-sm" onClick={() => removePerson(person.id)}>Excluir</button>
+                  {access?.isAdminLike ? <button className="rounded-md border border-line px-3 py-2 text-sm" onClick={() => removePerson(person.id)}>Excluir</button> : null}
                 </div>
               </div>
             </Card>

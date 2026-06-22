@@ -7,6 +7,7 @@ import { Badge, Button, Card, PageHeader, PageShell } from "@/components/ui";
 import { formatDate } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import type { Person } from "@/lib/types";
 
 type PageProps = {
@@ -30,8 +31,9 @@ export default function SegmentPage({ params }: PageProps) {
   useEffect(() => {
     async function loadPeople() {
       if (!supabase || !name) return;
+      const accessContext = await getAccessContext();
       const { data } = await supabase.from("people").select("*").order("name");
-      const allPeople = (data ?? []) as Person[];
+      const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
       setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
     }
 

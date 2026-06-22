@@ -7,6 +7,8 @@ create type visitor_status as enum ('novo', 'em_acompanhamento', 'integrado', 's
 create type task_type as enum ('ligar', 'visitar', 'orar', 'convidar', 'discipular');
 create type task_status as enum ('pendente', 'concluido');
 create type template_key as enum ('boas_vindas', 'aniversario', 'convite_culto', 'acompanhamento', 'afastados');
+create type app_role as enum ('admin', 'pastor', 'lider', 'membro');
+create type scope_type as enum ('grupo_familiar', 'departamento');
 
 create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -89,6 +91,25 @@ create table public.attendance (
   unique (event_id, person_id)
 );
 
+create table public.user_profiles (
+  id uuid primary key default gen_random_uuid(),
+  auth_user_id uuid not null references auth.users(id) on delete cascade,
+  person_id uuid references public.people(id) on delete set null,
+  role app_role not null default 'membro',
+  is_global_leader boolean not null default false,
+  created_at timestamptz not null default now(),
+  unique (auth_user_id)
+);
+
+create table public.user_scopes (
+  id uuid primary key default gen_random_uuid(),
+  user_profile_id uuid not null references public.user_profiles(id) on delete cascade,
+  scope_type scope_type not null,
+  scope_value text not null,
+  created_at timestamptz not null default now(),
+  unique (user_profile_id, scope_type, scope_value)
+);
+
 insert into public.message_templates (key, name, body) values
 ('boas_vindas', 'Boas-vindas', 'Ola {{nome}}, paz! Foi uma alegria receber voce. Conte conosco e seja muito bem-vindo(a).'),
 ('aniversario', 'Aniversario', 'Ola {{nome}}, feliz aniversario! Que Deus abencoe sua vida com graca, saude e paz.'),
@@ -103,6 +124,8 @@ alter table public.interactions enable row level security;
 alter table public.message_templates enable row level security;
 alter table public.events enable row level security;
 alter table public.attendance enable row level security;
+alter table public.user_profiles enable row level security;
+alter table public.user_scopes enable row level security;
 
 create policy "authenticated can read users" on public.users for select to authenticated using (true);
 create policy "authenticated manage people" on public.people for all to authenticated using (true) with check (true);
@@ -111,6 +134,8 @@ create policy "authenticated manage interactions" on public.interactions for all
 create policy "authenticated manage templates" on public.message_templates for all to authenticated using (true) with check (true);
 create policy "authenticated manage events" on public.events for all to authenticated using (true) with check (true);
 create policy "authenticated manage attendance" on public.attendance for all to authenticated using (true) with check (true);
+create policy "authenticated manage profiles" on public.user_profiles for all to authenticated using (true) with check (true);
+create policy "authenticated manage scopes" on public.user_scopes for all to authenticated using (true) with check (true);
 
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$

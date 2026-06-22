@@ -4,7 +4,8 @@ export type VisitorStatus = "novo" | "em_acompanhamento" | "integrado" | "sem_re
 export type TaskType = "ligar" | "visitar" | "orar" | "convidar" | "discipular";
 export type TaskStatus = "pendente" | "concluido";
 export type TemplateKey = "boas_vindas" | "aniversario" | "convite_culto" | "acompanhamento" | "afastados";
-export type UserRole = "admin" | "pastor" | "lider";
+export type UserRole = "admin" | "pastor" | "lider" | "membro";
+export type ScopeType = "grupo_familiar" | "departamento";
 
 export type Person = {
   id: string;
@@ -79,4 +80,31 @@ export type Attendance = {
   created_at: string;
   people?: Pick<Person, "name" | "status"> | null;
   events?: Pick<ChurchEvent, "name" | "event_date"> | null;
+};
+
+export type UserProfile = {
+  id: string;
+  auth_user_id: string;
+  person_id: string | null;
+  role: UserRole;
+  is_global_leader: boolean;
+  created_at: string;
+  people?: Pick<Person, "id" | "name" | "phone"> | null;
+};
+
+export type UserScope = {
+  id: string;
+  user_profile_id: string;
+  scope_type: ScopeType;
+  scope_value: string;
+  created_at: string;
+};
+
+export type AccessContext = {
+  profile: UserProfile | null;
+  scopes: UserScope[];
+  person: Person | null;
+  isAdminLike: boolean;
+  isLeader: boolean;
+  isMember: boolean;
 };
