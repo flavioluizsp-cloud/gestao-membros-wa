@@ -31,6 +31,7 @@ export type Person = {
   ecclesiastical_roles: string[] | null;
   department_roles: string[] | null;
   departments: string[] | null;
+  desired_departments: string[] | null;
   visitor_origin: VisitorOrigin | null;
   visitor_status: VisitorStatus | null;
   created_at: string;

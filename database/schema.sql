@@ -41,6 +41,7 @@ create table public.people (
   ecclesiastical_roles text[] not null default '{}',
   department_roles text[] not null default '{}',
   departments text[] not null default '{}',
+  desired_departments text[] not null default '{}',
   visitor_origin visitor_origin,
   visitor_status visitor_status,
   created_at timestamptz not null default now(),

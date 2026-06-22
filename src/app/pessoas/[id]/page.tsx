@@ -30,6 +30,7 @@ const emptyForm = {
   ecclesiastical_roles: [] as string[],
   department_roles: [] as string[],
   departments: [] as string[],
+  desired_departments: [] as string[],
   family_group: "",
   family_group_leader: "",
   assigned_leader: "",
@@ -103,6 +104,7 @@ export default function PersonProfilePage({ params }: PageProps) {
         ecclesiastical_roles: person.ecclesiastical_roles ?? [],
         department_roles: person.department_roles ?? [],
         departments: person.departments ?? [],
+        desired_departments: person.desired_departments ?? [],
         family_group: person.family_group ?? "",
         family_group_leader: person.family_group_leader ?? "",
         assigned_leader: person.assigned_leader ?? "",
@@ -137,6 +139,7 @@ export default function PersonProfilePage({ params }: PageProps) {
       baptism_church: form.baptism_church || null,
       baptizing_pastor: form.baptizing_pastor || null,
       departments: form.departments,
+      desired_departments: form.desired_departments,
       family_group: form.family_group || null,
       family_group_leader: getFamilyGroupLeader(form.family_group) || form.family_group_leader || null,
       notes: form.notes || null,
@@ -190,9 +193,9 @@ export default function PersonProfilePage({ params }: PageProps) {
             <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="E-mail"><input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
             <Field label="Data de nascimento"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
-            <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
+            <label className="mt-6 flex h-[42px] items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
               <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
-              Ocultar ano de nascimento
+              Ocultar somente o ano de nascimento
             </label>
             <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
           </div>
@@ -201,37 +204,23 @@ export default function PersonProfilePage({ params }: PageProps) {
         <Card>
           <h3 className="mb-4 text-lg font-semibold">2. Dados da igreja</h3>
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
-              <input type="checkbox" checked={form.is_baptized} onChange={(e) => setForm({ ...form, is_baptized: e.target.checked })} />
-              Pessoa batizada
-            </label>
+            <Field label="Pessoa batizada">
+              <select className={inputClass} value={form.is_baptized ? "sim" : "nao"} onChange={(e) => setForm({ ...form, is_baptized: e.target.value === "sim" })}>
+                <option value="nao">Nao</option>
+                <option value="sim">Sim</option>
+              </select>
+            </Field>
             <Field label="Data do batismo"><input className={inputClass} type="date" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
             <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
             <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
           </div>
 
-          {canManageRestricted ? (
-            <div className="mt-5 grid gap-4">
-              <Field label="Status determinado pelo pastor global">
-                <select className={inputClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PersonStatus })}>
-                  {Object.entries(personStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              </Field>
-              <Field label="Cargos administrativos">
-                <CheckboxGroup options={administrativeRoleOptions} values={form.administrative_roles} onChange={(values) => setForm({ ...form, administrative_roles: values })} />
-              </Field>
-              <Field label="Cargos eclesiasticos">
-                <CheckboxGroup options={ecclesiasticalRoleOptions} values={form.ecclesiastical_roles} onChange={(values) => setForm({ ...form, ecclesiastical_roles: values })} />
-              </Field>
-              <Field label="Cargo no departamento">
-                <CheckboxGroup options={departmentRoleOptions} values={form.department_roles} onChange={(values) => setForm({ ...form, department_roles: values })} />
-              </Field>
-            </div>
-          ) : null}
-
           <div className="mt-5 grid gap-4">
             <Field label="Departamentos que participa">
               <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values })} />
+            </Field>
+            <Field label="Departamentos que gostaria de participar">
+              <CheckboxGroup options={departmentOptions} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
             </Field>
             <Field label="Grupo Familiar">
               <select className={inputClass} value={form.family_group} onChange={(e) => setForm({ ...form, family_group: e.target.value, family_group_leader: getFamilyGroupLeader(e.target.value) })}>
@@ -253,6 +242,28 @@ export default function PersonProfilePage({ params }: PageProps) {
             <Field label="Observacoes"><textarea className={inputClass} rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
           </div>
         </Card>
+
+        {canManageRestricted ? (
+          <Card>
+            <h3 className="mb-4 text-lg font-semibold">3. Informacoes administrativas</h3>
+            <div className="grid gap-4">
+              <Field label="Status determinado pelo pastor global">
+                <select className={inputClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PersonStatus })}>
+                  {Object.entries(personStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </Field>
+              <Field label="Cargos administrativos">
+                <CheckboxGroup options={administrativeRoleOptions} values={form.administrative_roles} onChange={(values) => setForm({ ...form, administrative_roles: values })} />
+              </Field>
+              <Field label="Cargos eclesiasticos">
+                <CheckboxGroup options={ecclesiasticalRoleOptions} values={form.ecclesiastical_roles} onChange={(values) => setForm({ ...form, ecclesiastical_roles: values })} />
+              </Field>
+              <Field label="Cargo no departamento">
+                <CheckboxGroup options={departmentRoleOptions} values={form.department_roles} onChange={(values) => setForm({ ...form, department_roles: values })} />
+              </Field>
+            </div>
+          </Card>
+        ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
           {access?.isAdminLike && !isNew ? <button type="button" onClick={removePerson} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700"><Trash2 className="h-4 w-4" />Excluir</button> : <span />}
