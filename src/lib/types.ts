@@ -10,9 +10,12 @@ export type ScopeType = "grupo_familiar" | "departamento";
 export type Person = {
   id: string;
   name: string;
+  preferred_name: string | null;
   phone: string;
   email: string | null;
   birth_date: string | null;
+  hide_birth_year: boolean;
+  birth_city: string | null;
   status: PersonStatus;
   notes: string | null;
   last_contact_at: string | null;
@@ -22,6 +25,7 @@ export type Person = {
   is_baptized: boolean;
   baptism_date: string | null;
   baptism_church: string | null;
+  baptizing_pastor: string | null;
   roles: string[] | null;
   administrative_roles: string[] | null;
   ecclesiastical_roles: string[] | null;
