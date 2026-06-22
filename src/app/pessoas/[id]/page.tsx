@@ -56,11 +56,11 @@ function toggleValue(values: string[], value: string) {
 
 function CheckboxGroup({ options, values, onChange }: { options: string[]; values: string[]; onChange: (values: string[]) => void }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid grid-cols-2 gap-2">
       {options.map((option) => (
-        <label key={option} className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
+        <label key={option} className="flex min-h-10 items-center gap-2 rounded-md border border-line px-2 py-2 text-sm">
           <input type="checkbox" checked={values.includes(option)} onChange={() => onChange(toggleValue(values, option))} />
-          <span>{option}</span>
+          <span className="min-w-0 leading-snug">{option}</span>
         </label>
       ))}
     </div>
@@ -74,7 +74,9 @@ function getFamilyGroupLeader(group: string) {
 }
 
 function normalizeFamilyMembers(members: FamilyMember[]) {
-  return members.filter((member) => member.name.trim() || member.relationship.trim() || member.birth_year.trim());
+  return members
+    .map((member) => ({ ...member, birth_date: member.birth_date || (member as FamilyMember & { birth_year?: string }).birth_year || "" }))
+    .filter((member) => member.name.trim() || member.relationship.trim() || member.birth_date.trim());
 }
 
 export default function PersonProfilePage({ params }: PageProps) {
@@ -112,7 +114,11 @@ export default function PersonProfilePage({ params }: PageProps) {
         hide_birth_year: Boolean(person.hide_birth_year),
         birth_city: person.birth_city ?? "",
         marital_status: person.marital_status ?? "",
-        family_members: person.family_members ?? [],
+        family_members: (person.family_members ?? []).map((member) => ({
+          name: member.name ?? "",
+          relationship: member.relationship ?? "",
+          birth_date: member.birth_date || (member as FamilyMember & { birth_year?: string }).birth_year || ""
+        })),
         status: person.status,
         is_baptized: Boolean(person.is_baptized),
         baptism_date: person.baptism_date ?? "",
@@ -200,7 +206,7 @@ export default function PersonProfilePage({ params }: PageProps) {
   }
 
   function addFamilyMember() {
-    setForm({ ...form, family_members: [...form.family_members, { name: "", relationship: "Filho(a)", birth_year: "" }] });
+    setForm({ ...form, family_members: [...form.family_members, { name: "", relationship: "Filho(a)", birth_date: "" }] });
   }
 
   function removeFamilyMember(index: number) {
@@ -219,7 +225,7 @@ export default function PersonProfilePage({ params }: PageProps) {
           {message}
         </div>
       ) : null}
-      <form onSubmit={savePerson} className="space-y-5">
+      <form onSubmit={savePerson} className="space-y-4">
         <Card>
           <h3 className="mb-4 text-lg font-semibold">1. Dados pessoais</h3>
           <div className="grid gap-4 md:grid-cols-2">
@@ -240,7 +246,7 @@ export default function PersonProfilePage({ params }: PageProps) {
             </Field>
           </div>
 
-          <div className="mt-5 rounded-md border border-line p-4">
+          <div className="mt-4 rounded-md border border-line p-3 sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h4 className="font-semibold text-ink">Dados da familia</h4>
@@ -251,9 +257,9 @@ export default function PersonProfilePage({ params }: PageProps) {
               </button>
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-3 space-y-2">
               {form.family_members.map((member, index) => (
-                <div key={index} className="grid gap-3 rounded-md border border-line bg-white p-3 md:grid-cols-[1fr_170px_140px_auto]">
+                <div key={index} className="grid gap-2 rounded-md border border-line bg-white p-2 sm:p-3 md:grid-cols-[1fr_170px_160px_auto]">
                   <Field label={`Nome ${index + 1}`}>
                     <input className={inputClass} value={member.name} onChange={(e) => updateFamilyMember(index, "name", e.target.value)} />
                   </Field>
@@ -262,8 +268,8 @@ export default function PersonProfilePage({ params }: PageProps) {
                       {relationshipOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                     </select>
                   </Field>
-                  <Field label="Ano nascimento">
-                    <input className={inputClass} inputMode="numeric" maxLength={4} placeholder="Ex.: 2012" value={member.birth_year} onChange={(e) => updateFamilyMember(index, "birth_year", e.target.value.replace(/\D/g, "").slice(0, 4))} />
+                  <Field label="Data nascimento">
+                    <input className={inputClass} type="date" value={member.birth_date ?? ""} onChange={(e) => updateFamilyMember(index, "birth_date", e.target.value)} />
                   </Field>
                   <button type="button" onClick={() => removeFamilyMember(index)} className="mt-6 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">
                     Remover

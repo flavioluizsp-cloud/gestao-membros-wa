@@ -11,7 +11,7 @@ export type MaritalStatus = "solteiro" | "casado" | "uniao_estavel" | "juntos_se
 export type FamilyMember = {
   name: string;
   relationship: string;
-  birth_year: string;
+  birth_date: string;
 };
 
 export type Person = {
