@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
+import { useRouter } from "next/navigation"
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { departmentLeaders } from "@/lib/department-leaders";
 import type { ChurchEvent, PastoralTask, Person } from "@/lib/types";
@@ -19,6 +20,7 @@ type Segment = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [people, setPeople] = useState<Person[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [events, setEvents] = useState<ChurchEvent[]>([]);
@@ -27,6 +29,8 @@ export default function DashboardPage() {
     async function loadDashboardData() {
       if (!supabase || !membrosDb) return;
       const accessContext = await getAccessContext();
+      if (accessContext.isMember) { router.replace("/membro"); return; }
+      if (accessContext.isLeader) { router.replace("/lider"); return; }
       const [peopleResult, tasksResult, eventsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
         membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
