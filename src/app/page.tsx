@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, HeartHandshake, Users } from "lucide-react";
+import { HeartHandshake, MessageCircle, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { membrosDb, supabase } from "@/lib/supabase";
-import { isBirthdayThisWeek, formatDate } from "@/lib/date";
+import { isBirthdayThisWeek } from "@/lib/date";
 import { useRouter } from "next/navigation";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
-import type { ChurchEvent, DepartmentAssignment, PastoralTask, Person } from "@/lib/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import type { DepartmentAssignment, Person } from "@/lib/types";
 
 type OverviewCard = {
   href: string;
@@ -25,8 +26,6 @@ type OverviewCard = {
 export default function DashboardPage() {
   const router = useRouter();
   const [people, setPeople] = useState<Person[]>([]);
-  const [tasks, setTasks] = useState<PastoralTask[]>([]);
-  const [events, setEvents] = useState<ChurchEvent[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,15 +44,11 @@ export default function DashboardPage() {
         router.replace("/lider");
         return;
       }
-      const [peopleResult, tasksResult, eventsResult, departmentsResult] = await Promise.all([
+      const [peopleResult, departmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
-        membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
-        membrosDb.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
         membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)")
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
-      setTasks((tasksResult.data ?? []) as PastoralTask[]);
-      setEvents((eventsResult.data ?? []) as ChurchEvent[]);
       setDepartmentAssignments((departmentsResult.data ?? []) as DepartmentAssignment[]);
       setLoading(false);
     }
@@ -77,14 +72,12 @@ export default function DashboardPage() {
   const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
   const departments = buildDepartmentRows(people, departmentAssignments);
   const familyGroups = buildFamilyGroupRows(people);
-  const assignments = buildAssignmentRows(people);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
 
   const stats: Array<[string, number, LucideIcon]> = [
     ["Pessoas cadastradas", people.length, Users],
-    ["Visitantes do mes", visitorsThisMonth.length, HeartHandshake],
-    ["Aniversariantes da semana", birthdays.length, CalendarDays]
+    ["Visitantes do mes", visitorsThisMonth.length, HeartHandshake]
   ];
 
   const overviewCards: OverviewCard[] = [
@@ -103,14 +96,6 @@ export default function DashboardPage() {
       totalLabel: "Pessoas em GF",
       total: peopleInFamilyGroups,
       details: [["Sem GF", peopleWithoutFamilyGroup] as [string, number], ...familyGroups.slice(0, 3).map((item) => [item.title, item.people.length] as [string, number])]
-    },
-    {
-      href: "/visao/atribuicoes",
-      title: "Atribuicoes pastorais",
-      description: "Pessoas acompanhadas por lideres ou responsaveis diretos.",
-      totalLabel: "Pessoas atribuidas",
-      total: assignments.reduce((sum, item) => sum + item.people.length, 0),
-      details: assignments.slice(0, 4).map((item) => [item.title, item.people.length])
     }
   ];
 
@@ -135,39 +120,43 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+      <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {overviewCards.map((card) => (
           <OverviewSectionCard key={card.href} card={card} />
         ))}
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <h3 className="mb-3 font-semibold">Tarefas pastorais pendentes</h3>
-          <div className="space-y-3">
-            {tasks.slice(0, 5).map((task) => (
-              <div key={task.id} className="rounded-md border border-line p-3">
-                <p className="font-medium">{task.title}</p>
-                <p className="text-sm text-ink/60">{task.people?.name ?? "Sem pessoa vinculada"} - prazo {formatDate(task.due_date)}</p>
-              </div>
-            ))}
-            {tasks.length === 0 ? <p className="text-sm text-ink/60">Nenhuma tarefa pendente.</p> : null}
-          </div>
-        </Card>
-        <Card>
-          <h3 className="mb-3 font-semibold">Proximos eventos</h3>
-          <div className="space-y-3">
-            {events.map((event) => (
-              <div key={event.id} className="rounded-md border border-line p-3">
-                <p className="font-medium">{event.name}</p>
-                <p className="text-sm text-ink/60">{formatDate(event.event_date)} - {event.location ?? "Local a definir"}</p>
-              </div>
-            ))}
-            {events.length === 0 ? <p className="text-sm text-ink/60">Nenhum evento futuro cadastrado.</p> : null}
-          </div>
-        </Card>
-      </div>
+      <BirthdaysCard birthdays={birthdays} />
     </PageShell>
+  );
+}
+
+function BirthdaysCard({ birthdays }: { birthdays: Person[] }) {
+  return (
+    <Card className="mt-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold text-ink">Aniversariantes da semana</h3>
+        <Badge>{birthdays.length}</Badge>
+      </div>
+      <div className="space-y-2">
+        {birthdays.map((person) => (
+          <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
+            <div>
+              <p className="text-sm font-semibold text-ink">{person.preferred_name || person.name}</p>
+              <p className="text-xs text-ink/60">{formatBirthdayForDashboard(person.birth_date)}</p>
+            </div>
+            <a
+              href={buildWhatsAppUrl(person.phone, `Feliz aniversario ${person.preferred_name || person.name}! Que Deus te abencoe muito!`)}
+              target="_blank"
+              className="rounded-md border border-line p-2 text-moss hover:bg-sage"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </div>
+        ))}
+        {birthdays.length === 0 ? <p className="text-sm text-ink/60">Nenhum aniversariante nesta semana.</p> : null}
+      </div>
+    </Card>
   );
 }
 
@@ -226,14 +215,6 @@ function buildFamilyGroupRows(people: Person[]) {
   })).sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function buildAssignmentRows(people: Person[]) {
-  const map = new Map<string, Person[]>();
-  for (const person of people.filter((item) => item.assigned_leader)) {
-    map.set(person.assigned_leader!, [...(map.get(person.assigned_leader!) ?? []), person]);
-  }
-  return Array.from(map.entries()).map(([title, members]) => ({ title, subtitle: "Atribuicao", people: members })).sort((a, b) => a.title.localeCompare(b.title));
-}
-
 function findSegmentLeader(departmentName: string, members: Person[], departmentAssignments: DepartmentAssignment[]) {
   const configuredLeaders = departmentAssignments
     .filter((assignment) => assignment.department_name === departmentName && assignment.role === "lider")
@@ -246,4 +227,18 @@ function findSegmentLeader(departmentName: string, members: Person[], department
   if (leader) return leader.name;
   if (coLeader) return coLeader.name;
   return "Sem lider definido";
+}
+
+function formatBirthdayForDashboard(date?: string | null) {
+  if (!date) return "-";
+  const birthday = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const currentBirthday = new Date(now.getFullYear(), birthday.getUTCMonth(), birthday.getUTCDate());
+  if (currentBirthday < today) currentBirthday.setFullYear(now.getFullYear() + 1);
+
+  const day = String(currentBirthday.getDate()).padStart(2, "0");
+  const month = String(currentBirthday.getMonth() + 1).padStart(2, "0");
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(currentBirthday);
+  return `${day}/${month} - ${weekday}`;
 }
