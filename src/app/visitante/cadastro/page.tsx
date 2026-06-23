@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
@@ -60,6 +60,7 @@ export default function VisitanteCadastroPage() {
           <h2 className="text-xl font-bold text-ink">Obrigado pela visita!</h2>
           <p className="mt-2 text-sm text-ink/60">Ficamos felizes em ter voce conosco. Nossa equipe vai entrar em contato em breve.</p>
           {form.notes && <p className="mt-3 text-sm text-moss font-medium">Seu pedido de oracao foi recebido. Vamos orar por voce!</p>}
+          <a href="/" className="mt-6 inline-block rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-sage">Voltar</a>
         </div>
       </div>
     );

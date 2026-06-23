@@ -226,6 +226,9 @@ export default function PersonProfilePage({ params }: PageProps) {
 
   return (
     <PageShell>
+      <div className="mb-4">
+        <Link href="/" className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sage">← Voltar</Link>
+      </div>
       <PageHeader
         title={isNew ? "Nova pessoa" : form.preferred_name || form.name || "Perfil"}
         description="Perfil organizado por dados pessoais e dados da igreja."
