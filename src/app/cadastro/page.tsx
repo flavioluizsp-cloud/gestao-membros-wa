@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
-import { familyGroupOptions } from "@/lib/labels";
+import { departmentOptions, familyGroupOptions } from "@/lib/labels";
 import { membrosDb } from "@/lib/supabase";
 import type { FamilyMember, MaritalStatus } from "@/lib/types";
 
@@ -15,8 +15,24 @@ const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
 ];
 
 const relationshipOptions = ["Conjuge", "Filho(a)", "Pai", "Mae", "Irmao(a)", "Outro"];
-
 const emptyMember: FamilyMember = { name: "", relationship: "Filho(a)", birth_date: "" };
+
+function toggleValue(values: string[], value: string) {
+  return values.includes(value) ? values.filter((i) => i !== value) : [...values, value];
+}
+
+function CheckboxGroup({ options, values, onChange }: { options: string[]; values: string[]; onChange: (values: string[]) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {options.map((option) => (
+        <label key={option} className="flex min-h-10 items-center gap-2 rounded-md border border-line px-2 py-2 text-sm">
+          <input type="checkbox" checked={values.includes(option)} onChange={() => onChange(toggleValue(values, option))} />
+          <span className="min-w-0 leading-snug">{option}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
 
 function getFamilyGroupLeader(group: string) {
   const selected = familyGroupOptions.find((o) => o.value === group);
@@ -47,6 +63,7 @@ export default function CadastroPage() {
     baptizing_pastor: "",
     family_group: "",
     departments: [] as string[],
+    desired_departments: [] as string[],
   });
 
   const [showFamilyForm, setShowFamilyForm] = useState(false);
@@ -88,6 +105,7 @@ export default function CadastroPage() {
       family_group: form.family_group || null,
       family_group_leader: getFamilyGroupLeader(form.family_group) || null,
       departments: form.departments,
+      desired_departments: form.desired_departments,
       status: "visitante" as const,
       pending_approval: true,
     };
@@ -183,28 +201,34 @@ export default function CadastroPage() {
 
           <Card>
             <h3 className="mb-4 text-lg font-semibold">2. Dados da igreja</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4">
               <Field label="Voce e batizado?">
                 <select className={inputClass} value={form.is_baptized ? "sim" : "nao"} onChange={(e) => setForm({ ...form, is_baptized: e.target.value === "sim" })}>
                   <option value="nao">Nao</option>
                   <option value="sim">Sim</option>
                 </select>
               </Field>
-              {form.is_baptized && <>
-                <Field label="Data do batismo"><input className={inputClass} type="date" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
-                <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
-                <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
-              </>}
-              <div className="sm:col-span-2">
-                <Field label="Grupo Familiar">
-                  <select className={inputClass} value={form.family_group} onChange={(e) => setForm({ ...form, family_group: e.target.value })}>
-                    {familyGroupOptions.map((o) => {
-                      const leader = getFamilyGroupLeader(o.value);
-                      return <option key={o.label} value={o.value}>{leader ? `${o.label} - ${leader}` : o.label}</option>;
-                    })}
-                  </select>
-                </Field>
-              </div>
+              {form.is_baptized && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Data do batismo"><input className={inputClass} type="date" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
+                  <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
+                  <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
+                </div>
+              )}
+              <Field label="Grupo Familiar">
+                <select className={inputClass} value={form.family_group} onChange={(e) => setForm({ ...form, family_group: e.target.value })}>
+                  {familyGroupOptions.map((o) => {
+                    const leader = getFamilyGroupLeader(o.value);
+                    return <option key={o.label} value={o.value}>{leader ? `${o.label} - ${leader}` : o.label}</option>;
+                  })}
+                </select>
+              </Field>
+              <Field label="Departamentos que participa">
+                <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values })} />
+              </Field>
+              <Field label="Departamentos que gostaria de participar">
+                <CheckboxGroup options={departmentOptions} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
+              </Field>
             </div>
           </Card>
 
