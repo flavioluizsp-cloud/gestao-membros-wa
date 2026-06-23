@@ -24,7 +24,7 @@ export default function MembroHomePage() {
       if (ctx.person?.id && membrosDb) {
         const [{ data }, { data: allPeopleData }] = await Promise.all([
           membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
-          membrosDb.from("people").select("id, departments")
+          membrosDb.from("people").select("id, departments, family_group")
         ]);
         setPerson(data as Person | null);
         setAllPeople((allPeopleData ?? []) as Person[]);
@@ -103,15 +103,18 @@ export default function MembroHomePage() {
           <h3 className="mb-3 font-semibold text-ink">Minha igreja</h3>
           <div className="space-y-2 text-sm">
             {person.family_group ? (
-              <div className="flex justify-between">
-                <span className="text-ink/60">Grupo Familiar</span>
-                <span className="font-medium text-ink">{person.family_group}</span>
-              </div>
-            ) : null}
-            {familyGroupLeader ? (
-              <div className="flex justify-between">
-                <span className="text-ink/60">Lider do GF</span>
-                <span className="font-medium text-ink">{familyGroupLeader}</span>
+              <div>
+                <p className="mb-2 text-ink/60">Grupo Familiar</p>
+                <Link
+                  href={`/segmentos/grupo-familiar/${encodeURIComponent(person.family_group)}`}
+                  className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{person.family_group}</p>
+                    <p className="text-xs text-ink/60">Lider: {familyGroupLeader || "Nao definido"}</p>
+                  </div>
+                  <Badge>{allPeople.filter((p) => p.family_group === person.family_group).length}</Badge>
+                </Link>
               </div>
             ) : null}
             {person.is_baptized ? (
