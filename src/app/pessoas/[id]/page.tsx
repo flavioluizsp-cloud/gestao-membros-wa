@@ -241,7 +241,7 @@ export default function PersonProfilePage({ params }: PageProps) {
             <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="E-mail"><input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
             <div className="col-span-2 flex gap-3 items-end">
-              <Field label="Data de nascimento" className="flex-1"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
+              <Field label="Data de nascimento"><input className={inputClass + " flex-1"} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
               <label className="flex h-[42px] shrink-0 items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
                 Ocultar ano
