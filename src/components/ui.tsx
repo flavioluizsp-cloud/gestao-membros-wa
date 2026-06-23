@@ -25,7 +25,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-moss">IGREJA BATISTA INDEPENDENTE
 ABELARDO LUZ</p>
-          <p className="text-xs font-semibold uppercase tracking-wide text-moss/70">ABELARDO LUZ</p><h1 className="mt-0.5 text-xl font-bold text-ink">Portal do Membro</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-moss/70">ABELARDO LUZ</p><p className="mt-0.5 text-xl font-bold text-ink">Portal do Membro</p>
         </div>
         <nav className="space-y-1">
           {nav.map(([label, href]) => (
