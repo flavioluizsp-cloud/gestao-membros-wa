@@ -55,6 +55,12 @@ export default function LiderHomePage() {
         description="Visão geral do seu grupo e tarefas pastorais."
       />
 
+      {access?.person?.id ? (
+        <Link href={`/pessoas/${access.person.id}`} className="mb-6 inline-flex w-full justify-center rounded-md bg-moss px-3 py-2.5 text-sm font-semibold text-white hover:bg-moss/90 sm:w-auto">
+          Editar meus dados
+        </Link>
+      ) : null}
+
       <SignupLinksCard />
 
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
