@@ -56,7 +56,7 @@ export default function LiderHomePage() {
 
   if (loading) return <PageShell><p className="text-sm text-ink/60">Carregando...</p></PageShell>;
 
-  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const birthdays = allPeople.filter((person) => isBirthdayThisWeek(person.birth_date));
   const leaderName = access?.person?.preferred_name || access?.person?.name || "Lider";
   const familyGroup = access?.person?.family_group || "Sem grupo familiar cadastrado";
   const leadershipSegments = buildLeadershipSegments(access, people, allPeople, departmentAssignments);
