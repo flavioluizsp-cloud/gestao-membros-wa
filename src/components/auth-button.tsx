@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LogIn, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export function AuthButton() {
   const [email, setEmail] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!supabase) return;
@@ -19,6 +21,8 @@ export function AuthButton() {
     if (!supabase) return;
     await supabase.auth.signOut();
     setEmail(null);
+    router.replace("/login");
+    router.refresh();
   }
 
   if (!email) {
