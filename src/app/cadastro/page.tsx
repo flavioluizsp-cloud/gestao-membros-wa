@@ -181,6 +181,8 @@ export default function CadastroPage() {
           <div className="mb-4 text-4xl">🎉</div>
           <h2 className="text-xl font-bold text-ink">Cadastro enviado!</h2>
           <p className="mt-2 text-sm text-ink/60">Seu login foi criado e suas informacoes foram recebidas. A lideranca ainda precisa aprovar seu cadastro para liberar o acesso completo.</p>
+          <a href="/membro" className="mt-4 inline-block rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white hover:bg-moss/90">Acessar minha conta</a>
+          <p className="mt-3 text-xs text-ink/40">Dica: salve este site como atalho na tela inicial do seu celular para acessar rapido.</p>
         </div>
       </div>
     );
