@@ -7,7 +7,7 @@ import { Badge, Button, Card, PageHeader, PageShell } from "@/components/ui";
 import { formatDate } from "@/lib/date";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
+import { getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
 import type { DepartmentAssignment, Person } from "@/lib/types";
 
@@ -41,7 +41,6 @@ export default function SegmentPage({ params }: PageProps) {
         membrosDb.from("people").select("*").order("name"),
         type === "departamento" ? membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("department_name", name) : Promise.resolve({ data: [] })
       ]);
-      const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
       const role = accessContext?.profile?.role;
       setIsLeader(role === "admin" || role === "pastor" || role === "lider");
       const allPeopleData = (data ?? []) as Person[];
@@ -58,7 +57,7 @@ export default function SegmentPage({ params }: PageProps) {
       } else {
         setLeaderPeople([]);
       }
-      setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
+      setPeople(allPeopleData.filter((person) => belongsToSegment(person, type, name)));
     }
 
     loadPeople();
