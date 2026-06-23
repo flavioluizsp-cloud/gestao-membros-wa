@@ -365,8 +365,8 @@ export default function PersonProfilePage({ params }: PageProps) {
                 })}
               </select>
             </Field>
-            <Field label="Lider do Grupo Familiar"><input className={inputClass} value={getFamilyGroupLeader(form.family_group) || "Sem lider definido"} readOnly /></Field>
-            <Field label="Observacoes"><textarea className={inputClass} rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
+            
+            
           </div>
         </Card>
 
