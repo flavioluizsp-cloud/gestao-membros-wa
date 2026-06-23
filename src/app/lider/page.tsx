@@ -93,7 +93,7 @@ export default function LiderHomePage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-3 font-semibold">Grupos que lidero</h3>
+          <h3 className="mb-3 font-semibold">Departamentos que lidero</h3>
           <div className="space-y-2">
             {leadershipSegments.map((segment) => (
               <Link
