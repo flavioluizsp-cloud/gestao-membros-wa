@@ -22,6 +22,7 @@ export default function SegmentPage({ params }: PageProps) {
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [message, setMessage] = useState("");
   const [isLeader, setIsLeader] = useState(false);
+  const [leaderPeople, setLeaderPeople] = useState<{name: string; phone?: string}[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -42,8 +43,21 @@ export default function SegmentPage({ params }: PageProps) {
       const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
       const role = accessContext?.profile?.role;
       setIsLeader(role === "admin" || role === "pastor" || role === "lider");
-      setAllPeople((data ?? []) as Person[]);
-      setDepartmentAssignments((departmentData ?? []) as DepartmentAssignment[]);
+      const allPeopleData = (data ?? []) as Person[];
+      const assignments = (departmentData ?? []) as DepartmentAssignment[];
+      setAllPeople(allPeopleData);
+      setDepartmentAssignments(assignments);
+      if (type === "departamento") {
+        const leaders = assignments
+          .filter((a) => a.role === "lider")
+          .map((a) => ({ name: a.people?.preferred_name || a.people?.name || "", phone: a.people?.phone }))
+          .filter((l) => l.name);
+        setLeaderPeople(leaders);
+      } else if (type === "grupo-familiar") {
+        const leaderName = allPeopleData.find((p) => p.family_group === decodeURIComponent(name))?.family_group_leader;
+        const leaderPerson = allPeopleData.find((p) => (p.preferred_name || p.name) === leaderName);
+        if (leaderName) setLeaderPeople([{ name: leaderName, phone: leaderPerson?.phone }]);
+      }
       setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
     }
 
@@ -92,8 +106,19 @@ export default function SegmentPage({ params }: PageProps) {
           <p className="mt-2 text-3xl font-bold">{people.length}</p>
         </Card>
         <Card>
-          <p className="text-sm text-ink/60">Lider</p>
-          <p className="mt-2 font-semibold">{leader}</p>
+          <p className="mb-2 text-sm text-ink/60">Lider</p>
+          <div className="space-y-2">
+            {leaderPeople.length > 0 ? leaderPeople.map((l, i) => (
+              <div key={i} className="flex items-center justify-between rounded-md border border-line px-3 py-2">
+                <p className="text-sm font-semibold text-ink">{l.name}</p>
+                {l.phone ? (
+                  <a href={buildWhatsAppUrl(l.phone, `Ola ${l.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                ) : null}
+              </div>
+            )) : <p className="text-sm font-semibold text-ink">{leader}</p>}
+          </div>
         </Card>
         {isLeader ? (
           <Card>
