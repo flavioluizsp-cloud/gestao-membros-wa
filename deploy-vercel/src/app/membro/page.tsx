@@ -15,7 +15,6 @@ export default function MembroHomePage() {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
   const [allPeople, setAllPeople] = useState<Person[]>([]);
-  const [allPeople, setAllPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
