@@ -235,7 +235,7 @@ export default function PersonProfilePage({ params }: PageProps) {
       <form onSubmit={savePerson} className="space-y-4">
         <Card>
           <h3 className="mb-4 text-lg font-semibold">1. Dados pessoais</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome completo"><input required className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
             <Field label="Como deseja ser chamado"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
             <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
@@ -338,7 +338,7 @@ export default function PersonProfilePage({ params }: PageProps) {
 
         <Card>
           <h3 className="mb-4 text-lg font-semibold">2. Dados da igreja</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Pessoa batizada">
               <select className={inputClass} value={form.is_baptized ? "sim" : "nao"} onChange={(e) => setForm({ ...form, is_baptized: e.target.value === "sim" })}>
                 <option value="nao">Nao</option>
