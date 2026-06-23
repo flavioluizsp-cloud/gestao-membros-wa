@@ -7,7 +7,7 @@ import { Card } from "@/components/ui";
 const siteUrl = "https://gestao-membros-wa.vercel.app";
 
 const links = [
-  { label: "Cadastro de membro", url: `${siteUrl}/cadastro` },
+  { label: "Cadastro de membro", url: `${siteUrl}/novo-membro` },
   { label: "Cadastro de visitante", url: `${siteUrl}/registro-visitante` }
 ];
 
