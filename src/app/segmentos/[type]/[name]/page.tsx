@@ -21,6 +21,7 @@ export default function SegmentPage({ params }: PageProps) {
   const [allPeople, setAllPeople] = useState<Person[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [message, setMessage] = useState("");
+  const [isLeader, setIsLeader] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -39,6 +40,8 @@ export default function SegmentPage({ params }: PageProps) {
         type === "departamento" ? membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("department_name", name) : Promise.resolve({ data: [] })
       ]);
       const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
+      const role = accessContext?.profile?.role;
+      setIsLeader(role === "admin" || role === "pastor" || role === "lider");
       setAllPeople((data ?? []) as Person[]);
       setDepartmentAssignments((departmentData ?? []) as DepartmentAssignment[]);
       setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
@@ -92,14 +95,17 @@ export default function SegmentPage({ params }: PageProps) {
           <p className="text-sm text-ink/60">Lider</p>
           <p className="mt-2 font-semibold">{leader}</p>
         </Card>
-        <Card>
-          <p className="text-sm text-ink/60">Enviar para o segmento</p>
+        {isLeader ? (
+          <Card>
+            <p className="text-sm text-ink/60">Enviar para o segmento</p>
           <Button className="mt-3 w-full gap-2" onClick={openAllMessages} disabled={people.length === 0}>
             <MessageCircle className="h-4 w-4" />Mensagem para todos
           </Button>
-        </Card>
+          </Card>
+        ) : null}
       </div>
 
+      {isLeader ? (
       <Card className="mt-5">
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-ink">Mensagem</span>
@@ -115,6 +121,7 @@ export default function SegmentPage({ params }: PageProps) {
           Nome
         </button>
       </Card>
+      ) : null}
 
       <Card className="mt-5">
         <h3 className="mb-3 font-semibold">Gestao dos contatos</h3>
@@ -129,6 +136,7 @@ export default function SegmentPage({ params }: PageProps) {
                 <p className="mt-1 text-sm text-ink/60">{person.phone} - nasc. {formatDate(person.birth_date)}</p>
                 <p className="mt-1 text-sm text-ink/60">GF: {person.family_group ?? "Sem grupo"} - Atribuicao: {person.assigned_leader ?? "-"}</p>
               </div>
+              {isLeader ? (
               <a
                 href={buildWhatsAppUrl(person.phone, renderPersonMessage(messageToSend, person))}
                 target="_blank"
@@ -136,6 +144,7 @@ export default function SegmentPage({ params }: PageProps) {
               >
                 <MessageCircle className="h-4 w-4" />WhatsApp
               </a>
+              ) : null}
             </div>
           ))}
           {people.length === 0 ? <p className="text-sm text-ink/60">Nenhuma pessoa neste segmento.</p> : null}
