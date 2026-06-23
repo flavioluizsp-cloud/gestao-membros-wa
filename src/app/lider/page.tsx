@@ -6,15 +6,24 @@ import { MessageCircle } from "lucide-react";
 import { Badge, Card, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
+import { formatDate, isBirthdayThisWeek } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import type { AccessContext, PastoralTask, Person } from "@/lib/types";
+import type { AccessContext, DepartmentAssignment, PastoralTask, Person } from "@/lib/types";
+
+type LeadershipSegment = {
+  key: string;
+  title: string;
+  type: "departamento" | "grupo-familiar" | "atribuicao";
+  count: number;
+};
 
 export default function LiderHomePage() {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
+  const [allPeople, setAllPeople] = useState<Person[]>([]);
+  const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,14 +33,17 @@ export default function LiderHomePage() {
       const ctx = await getAccessContext();
       setAccess(ctx);
 
-      const [peopleResult, tasksResult] = await Promise.all([
+      const [peopleResult, tasksResult, assignmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
-        membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date")
+        membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("role", "lider")
       ]);
 
-      const allPeople = (peopleResult.data ?? []) as Person[];
-      const filtered = filterPeopleByAccess(allPeople, ctx);
+      const allPeopleData = (peopleResult.data ?? []) as Person[];
+      const filtered = filterPeopleByAccess(allPeopleData, ctx);
+      setAllPeople(allPeopleData);
       setPeople(filtered);
+      setDepartmentAssignments((assignmentsResult.data ?? []) as DepartmentAssignment[]);
 
       const myTasks = ((tasksResult.data ?? []) as PastoralTask[]).filter(
         (task) => task.responsible === ctx.person?.name
@@ -44,15 +56,16 @@ export default function LiderHomePage() {
 
   if (loading) return <PageShell><p className="text-sm text-ink/60">Carregando...</p></PageShell>;
 
-  const birthdays = people.filter((p) => isBirthdayThisWeek(p.birth_date));
-  const stale = people.filter((p) => isOlderThanDays(p.last_contact_at, 30));
-  const leaderName = access?.person?.preferred_name || access?.person?.name || "Líder";
+  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const leaderName = access?.person?.preferred_name || access?.person?.name || "Lider";
+  const familyGroup = access?.person?.family_group || "Sem grupo familiar cadastrado";
+  const leadershipSegments = buildLeadershipSegments(access, people, allPeople, departmentAssignments);
 
   return (
     <PageShell>
       <PageHeader
-        title={`Olá, ${leaderName} 👋`}
-        description="Visão geral do seu grupo e tarefas pastorais."
+        title={`Ola, ${leaderName}`}
+        description="Visao geral dos grupos, departamentos e tarefas sob seu cuidado."
       />
 
       {access?.person?.id ? (
@@ -63,9 +76,9 @@ export default function LiderHomePage() {
 
       <SignupLinksCard />
 
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card>
-          <p className="text-sm text-ink/60">Pessoas no grupo</p>
+          <p className="text-sm text-ink/60">Pessoas acompanhadas</p>
           <p className="mt-2 text-3xl font-bold text-ink">{people.length}</p>
         </Card>
         <Card>
@@ -73,66 +86,71 @@ export default function LiderHomePage() {
           <p className="mt-2 text-3xl font-bold text-ink">{birthdays.length}</p>
         </Card>
         <Card>
-          <p className="text-sm text-ink/60">Sem contato há 30+ dias</p>
-          <p className="mt-2 text-3xl font-bold text-ink">{stale.length}</p>
+          <p className="text-sm text-ink/60">Meu grupo familiar</p>
+          <p className="mt-2 text-xl font-bold text-ink">{familyGroup}</p>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {birthdays.length > 0 && (
-          <Card>
-            <h3 className="mb-3 font-semibold">🎂 Aniversariantes da semana</h3>
+        <Card>
+          <h3 className="mb-3 font-semibold">Grupos que lidero</h3>
+          <div className="space-y-2">
+            {leadershipSegments.map((segment) => (
+              <Link
+                key={segment.key}
+                href={`/segmentos/${segment.type}/${encodeURIComponent(segment.title)}`}
+                className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-ink">{segment.title}</p>
+                  <p className="text-xs text-ink/60">{segmentLabel(segment.type)}</p>
+                </div>
+                <Badge>{segment.count}</Badge>
+              </Link>
+            ))}
+            {leadershipSegments.length === 0 ? <p className="text-sm text-ink/60">Nenhum grupo ou departamento atribuido como lider.</p> : null}
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="mb-3 font-semibold">Aniversariantes da semana</h3>
+          {birthdays.length > 0 ? (
             <div className="space-y-2">
               {birthdays.map((person) => (
                 <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
                   <div>
                     <p className="text-sm font-semibold text-ink">{person.preferred_name || person.name}</p>
-                    <p className="text-xs text-ink/60">{formatDate(person.birth_date ?? "")}</p>
+                    <p className="text-xs text-ink/60">{formatBirthdayForLeader(person.birth_date)}</p>
                   </div>
-                  <a href={buildWhatsAppUrl(person.phone, `Feliz aniversario ${person.preferred_name || person.name}! Que Deus te abencoe muito!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
+                  <a
+                    href={buildWhatsAppUrl(person.phone, `Feliz aniversario ${person.preferred_name || person.name}! Que Deus te abencoe muito!`)}
+                    target="_blank"
+                    className="rounded-md border border-line p-2 text-moss hover:bg-sage"
+                  >
                     <MessageCircle className="h-4 w-4" />
                   </a>
                 </div>
               ))}
             </div>
-          </Card>
-        )}
+          ) : <p className="text-sm text-ink/60">Nenhum aniversariante nesta semana.</p>}
+        </Card>
 
-        {stale.length > 0 && (
+        {tasks.length > 0 ? (
           <Card>
-            <h3 className="mb-3 font-semibold">⚠️ Sem contato há 30+ dias</h3>
-            <div className="space-y-2">
-              {stale.slice(0, 6).map((person) => (
-                <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{person.preferred_name || person.name}</p>
-                    <p className="text-xs text-ink/60">Último contato: {person.last_contact_at ? formatDate(person.last_contact_at) : "nunca"}</p>
-                  </div>
-                  <a href={buildWhatsAppUrl(person.phone, `Ola ${person.preferred_name || person.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
-                    <MessageCircle className="h-4 w-4" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {tasks.length > 0 && (
-          <Card>
-            <h3 className="mb-3 font-semibold">📋 Minhas tarefas pastorais</h3>
+            <h3 className="mb-3 font-semibold">Minhas tarefas pastorais</h3>
             <div className="space-y-2">
               {tasks.map((task) => (
                 <div key={task.id} className="rounded-md border border-line px-3 py-2.5">
                   <p className="text-sm font-semibold text-ink">{task.title}</p>
-                  <p className="text-xs text-ink/60">{task.people?.name ?? "Sem pessoa"} · prazo {formatDate(task.due_date ?? "")}</p>
+                  <p className="text-xs text-ink/60">{task.people?.name ?? "Sem pessoa"} - prazo {formatDate(task.due_date ?? "")}</p>
                 </div>
               ))}
             </div>
           </Card>
-        )}
+        ) : null}
 
         <Card>
-          <h3 className="mb-3 font-semibold">👥 Meu grupo</h3>
+          <h3 className="mb-3 font-semibold">Pessoas sob meu cuidado</h3>
           <div className="space-y-2">
             {people.map((person) => (
               <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
@@ -143,7 +161,7 @@ export default function LiderHomePage() {
                   </div>
                   <p className="text-xs text-ink/60">{person.phone}</p>
                 </div>
-                <div className="flex items-center gap-2 ml-2">
+                <div className="ml-2 flex items-center gap-2">
                   <a href={buildWhatsAppUrl(person.phone, `Ola ${person.preferred_name || person.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
                     <MessageCircle className="h-4 w-4" />
                   </a>
@@ -153,10 +171,113 @@ export default function LiderHomePage() {
                 </div>
               </div>
             ))}
-            {people.length === 0 && <p className="text-sm text-ink/60">Nenhuma pessoa atribuída ao seu grupo.</p>}
+            {people.length === 0 ? <p className="text-sm text-ink/60">Nenhuma pessoa atribuida ao seu grupo.</p> : null}
           </div>
         </Card>
       </div>
     </PageShell>
   );
+}
+
+function buildLeadershipSegments(
+  access: AccessContext | null,
+  people: Person[],
+  allPeople: Person[],
+  departmentAssignments: DepartmentAssignment[]
+) {
+  const person = access?.person;
+  const profilePersonId = access?.profile?.person_id;
+  const personName = person?.name;
+  const personPreferredName = person?.preferred_name;
+  const segments = new Map<string, LeadershipSegment>();
+
+  for (const assignment of departmentAssignments) {
+    if (assignment.person_id !== profilePersonId) continue;
+    const count = allPeople.filter((item) => item.departments?.includes(assignment.department_name)).length;
+    segments.set(`departamento-${assignment.department_name}`, {
+      key: `departamento-${assignment.department_name}`,
+      title: assignment.department_name,
+      type: "departamento",
+      count
+    });
+  }
+
+  for (const scope of access?.scopes ?? []) {
+    if (scope.scope_type === "departamento") {
+      const count = people.filter((item) => item.departments?.includes(scope.scope_value)).length;
+      segments.set(`departamento-${scope.scope_value}`, {
+        key: `departamento-${scope.scope_value}`,
+        title: scope.scope_value,
+        type: "departamento",
+        count
+      });
+    }
+    if (scope.scope_type === "grupo_familiar") {
+      const count = people.filter((item) => item.family_group === scope.scope_value).length;
+      segments.set(`grupo-${scope.scope_value}`, {
+        key: `grupo-${scope.scope_value}`,
+        title: scope.scope_value,
+        type: "grupo-familiar",
+        count
+      });
+    }
+  }
+
+  const familyGroupsLed = allPeople
+    .filter((item) => item.family_group && isLeaderNameMatch(item.family_group_leader, personName, personPreferredName))
+    .map((item) => item.family_group as string);
+
+  for (const groupName of Array.from(new Set(familyGroupsLed))) {
+    const count = allPeople.filter((item) => item.family_group === groupName).length;
+    segments.set(`grupo-${groupName}`, {
+      key: `grupo-${groupName}`,
+      title: groupName,
+      type: "grupo-familiar",
+      count
+    });
+  }
+
+  if (personName) {
+    const assignedCount = allPeople.filter((item) => item.assigned_leader === personName || item.assigned_leader === personPreferredName).length;
+    if (assignedCount > 0) {
+      segments.set(`atribuicao-${personName}`, {
+        key: `atribuicao-${personName}`,
+        title: personName,
+        type: "atribuicao",
+        count: assignedCount
+      });
+    }
+  }
+
+  return Array.from(segments.values()).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function isLeaderNameMatch(value?: string | null, name?: string | null, preferredName?: string | null) {
+  if (!value) return false;
+  const normalized = normalizeText(value);
+  return [name, preferredName].filter(Boolean).some((candidate) => normalized.includes(normalizeText(candidate ?? "")));
+}
+
+function normalizeText(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function segmentLabel(type: LeadershipSegment["type"]) {
+  if (type === "departamento") return "Departamento";
+  if (type === "grupo-familiar") return "Grupo Familiar";
+  return "Atribuicao direta";
+}
+
+function formatBirthdayForLeader(date?: string | null) {
+  if (!date) return "-";
+  const birthday = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const currentBirthday = new Date(now.getFullYear(), birthday.getUTCMonth(), birthday.getUTCDate());
+  if (currentBirthday < today) currentBirthday.setFullYear(now.getFullYear() + 1);
+
+  const day = String(currentBirthday.getDate()).padStart(2, "0");
+  const month = String(currentBirthday.getMonth() + 1).padStart(2, "0");
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(currentBirthday);
+  return `${day}/${month} - ${weekday}`;
 }
