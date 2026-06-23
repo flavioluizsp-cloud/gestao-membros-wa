@@ -22,8 +22,12 @@ export default function MembroHomePage() {
       const ctx = await getAccessContext();
       setAccess(ctx);
       if (ctx.person?.id && membrosDb) {
-        const { data } = await membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle();
+        const [{ data }, { data: allPeopleData }] = await Promise.all([
+          membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
+          membrosDb.from("people").select("id, departments"),
+        ]);
         setPerson(data as Person | null);
+        setAllPeople((allPeopleData ?? []) as Person[]);
       }
       setLoading(false);
     }
