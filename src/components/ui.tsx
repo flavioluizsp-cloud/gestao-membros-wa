@@ -23,8 +23,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-line bg-white px-4 py-5 lg:block">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-moss">IGREJA BATISTA INDEPENDENTE
-ABELARDO LUZ</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-moss">IGREJA BATISTA INDEPENDENTE</p>
           <p className="text-xs font-semibold uppercase tracking-wide text-moss/70">ABELARDO LUZ</p><p className="mt-0.5 text-xl font-bold text-ink">Portal do Membro</p>
         </div>
         <nav className="space-y-1">
@@ -40,8 +39,7 @@ ABELARDO LUZ</p>
         <div className="sticky top-0 z-30 border-b border-line bg-white px-4 py-3 shadow-sm lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-moss">IGREJA BATISTA INDEPENDENTE
-ABELARDO LUZ</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-moss">IGREJA BATISTA INDEPENDENTE</p>
               <p className="font-bold text-ink">Portal do Membro</p>
             </div>
             <button
