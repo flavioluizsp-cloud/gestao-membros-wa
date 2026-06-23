@@ -10,8 +10,7 @@ import { membrosDb, supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { useRouter } from "next/navigation"
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { departmentLeaders } from "@/lib/department-leaders";
-import type { ChurchEvent, PastoralTask, Person } from "@/lib/types";
+import type { ChurchEvent, DepartmentSetting, PastoralTask, Person } from "@/lib/types";
 
 type Segment = {
   key: string;
@@ -25,6 +24,7 @@ export default function DashboardPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [events, setEvents] = useState<ChurchEvent[]>([]);
+  const [departmentSettings, setDepartmentSettings] = useState<DepartmentSetting[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -32,14 +32,16 @@ export default function DashboardPage() {
       const accessContext = await getAccessContext();
       if (accessContext.isMember) { router.replace("/membro"); return; }
       if (accessContext.isLeader) { router.replace("/lider"); return; }
-      const [peopleResult, tasksResult, eventsResult] = await Promise.all([
+      const [peopleResult, tasksResult, eventsResult, departmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
         membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
-        membrosDb.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6)
+        membrosDb.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
+        membrosDb.from("department_settings").select("*")
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
       setTasks((tasksResult.data ?? []) as PastoralTask[]);
       setEvents((eventsResult.data ?? []) as ChurchEvent[]);
+      setDepartmentSettings((departmentsResult.data ?? []) as DepartmentSetting[]);
     }
 
     loadDashboardData();
@@ -59,7 +61,7 @@ export default function DashboardPage() {
   const departments = buildSegments(
     people,
     (person) => person.departments ?? [],
-    (name, members) => ({ key: `dep-${name}`, title: name, subtitle: findSegmentLeader(members), people: members })
+    (name, members) => ({ key: `dep-${name}`, title: name, subtitle: findSegmentLeader(name, members, departmentSettings, people), people: members })
   );
   const familyGroups = buildSegments(
     people.filter((person) => person.family_group),
@@ -131,9 +133,10 @@ export default function DashboardPage() {
   );
 }
 
-function findSegmentLeader(members: Person[]) {
-  const department = members.flatMap((person) => person.departments ?? []).find((name) => departmentLeaders[name]);
-  if (department) return departmentLeaders[department];
+function findSegmentLeader(departmentName: string, members: Person[], departmentSettings: DepartmentSetting[], allPeople: Person[]) {
+  const setting = departmentSettings.find((department) => department.name === departmentName);
+  const configuredLeader = setting?.leader_person_id ? allPeople.find((person) => person.id === setting.leader_person_id) : null;
+  if (configuredLeader) return configuredLeader.preferred_name || configuredLeader.name;
   const leader = members.find((person) => person.department_roles?.includes("Lider"));
   const coLeader = members.find((person) => person.department_roles?.includes("Co-Lider"));
   if (leader && coLeader) return `${leader.name} / ${coLeader.name}`;

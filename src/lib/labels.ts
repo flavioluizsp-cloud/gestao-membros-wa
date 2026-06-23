@@ -64,8 +64,7 @@ export const departmentOptions = [
   "Homens",
   "Infantil",
   "Introdutores",
-  "Comunicacao",
-  "Teste"
+  "Comunicacao"
 ];
 
 export const familyGroupOptions = [

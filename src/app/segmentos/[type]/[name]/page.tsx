@@ -8,8 +8,7 @@ import { formatDate } from "@/lib/date";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { departmentLeaders } from "@/lib/department-leaders";
-import type { Person } from "@/lib/types";
+import type { DepartmentSetting, Person } from "@/lib/types";
 
 type PageProps = {
   params: Promise<{ type: string; name: string }>;
@@ -19,6 +18,8 @@ export default function SegmentPage({ params }: PageProps) {
   const [type, setType] = useState("");
   const [name, setName] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
+  const [allPeople, setAllPeople] = useState<Person[]>([]);
+  const [departmentSetting, setDepartmentSetting] = useState<DepartmentSetting | null>(null);
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -33,15 +34,20 @@ export default function SegmentPage({ params }: PageProps) {
     async function loadPeople() {
       if (!supabase || !membrosDb || !name) return;
       const accessContext = await getAccessContext();
-      const { data } = await membrosDb.from("people").select("*").order("name");
+      const [{ data }, { data: departmentData }] = await Promise.all([
+        membrosDb.from("people").select("*").order("name"),
+        type === "departamento" ? membrosDb.from("department_settings").select("*").eq("name", name).maybeSingle() : Promise.resolve({ data: null })
+      ]);
       const allPeople = filterPeopleByAccess((data ?? []) as Person[], accessContext);
+      setAllPeople((data ?? []) as Person[]);
+      setDepartmentSetting(departmentData as DepartmentSetting | null);
       setPeople(allPeople.filter((person) => belongsToSegment(person, type, name)));
     }
 
     loadPeople();
   }, [type, name]);
 
-  const leader = useMemo(() => findLeader(type, name, people), [type, name, people]);
+  const leader = useMemo(() => findLeader(type, name, people, departmentSetting, allPeople), [type, name, people, departmentSetting, allPeople]);
   const defaultMessage = buildSegmentMessage(type, name);
   const messageToSend = message.trim() || defaultMessage;
 
@@ -146,10 +152,13 @@ function belongsToSegment(person: Person, type: string, name: string) {
   return false;
 }
 
-function findLeader(type: string, name: string, people: Person[]) {
+function findLeader(type: string, name: string, people: Person[], departmentSetting: DepartmentSetting | null, allPeople: Person[]) {
   if (type === "grupo-familiar") return people.find((person) => person.family_group === name)?.family_group_leader ?? "Sem lider definido";
   if (type === "atribuicao") return name;
-  if (type === "departamento" && departmentLeaders[name]) return departmentLeaders[name];
+  if (type === "departamento" && departmentSetting?.leader_person_id) {
+    const configuredLeader = allPeople.find((person) => person.id === departmentSetting.leader_person_id);
+    if (configuredLeader) return configuredLeader.preferred_name || configuredLeader.name;
+  }
   const leader = people.find((person) => person.department_roles?.includes("Lider"));
   const coLeader = people.find((person) => person.department_roles?.includes("Co-Lider"));
   if (leader && coLeader) return `${leader.name} / ${coLeader.name}`;

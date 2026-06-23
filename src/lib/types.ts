@@ -124,6 +124,16 @@ export type UserScope = {
   created_at: string;
 };
 
+export type DepartmentSetting = {
+  id: string;
+  name: string;
+  leader_person_id: string | null;
+  co_leader_person_ids: string[] | null;
+  created_at: string;
+  updated_at: string | null;
+  leader?: Pick<Person, "id" | "name" | "preferred_name" | "phone"> | null;
+};
+
 export type AccessContext = {
   profile: UserProfile | null;
   scopes: UserScope[];

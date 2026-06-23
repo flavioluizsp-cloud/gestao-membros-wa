@@ -15,6 +15,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   const adminNav = [
     ["Dashboard", "/"],
     ["Pessoas", "/pessoas"],
+    ["Departamentos", "/departamentos"],
     ["Visitantes", "/visitantes"],
     ["Tarefas", "/tarefas"],
     ["Mensagens", "/mensagens"],
