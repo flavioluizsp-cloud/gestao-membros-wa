@@ -76,22 +76,7 @@ export default function LiderHomePage() {
 
       <SignupLinksCard />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card>
-          <p className="text-sm text-ink/60">Pessoas acompanhadas</p>
-          <p className="mt-2 text-3xl font-bold text-ink">{people.length}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-ink/60">Aniversariantes esta semana</p>
-          <p className="mt-2 text-3xl font-bold text-ink">{birthdays.length}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-ink/60">Meu grupo familiar</p>
-          <p className="mt-2 text-xl font-bold text-ink">{familyGroup}</p>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
+<div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="mb-3 font-semibold">Departamentos que lidero</h3>
           <div className="space-y-2">
@@ -150,7 +135,7 @@ export default function LiderHomePage() {
         ) : null}
 
         <Card>
-          <h3 className="mb-3 font-semibold">Pessoas sob meu cuidado</h3>
+          <h3 className="mb-3 font-semibold">Pessoas que estou discipulando</h3>
           <div className="space-y-2">
             {people.map((person) => (
               <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
