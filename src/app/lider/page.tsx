@@ -109,13 +109,17 @@ export default function LiderHomePage() {
               {(access?.person?.departments ?? []).map((deptName) => {
                 const count = allPeople.filter((item) => item.departments?.includes(deptName)).length;
                 return (
-                  <div key={deptName} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
+                  <Link
+                    key={deptName}
+                    href={`/segmentos/departamento/${encodeURIComponent(deptName)}`}
+                    className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                  >
                     <div>
                       <p className="text-sm font-semibold text-ink">{deptName}</p>
                       <p className="text-xs text-ink/60">Participante</p>
                     </div>
                     <Badge>{count}</Badge>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
