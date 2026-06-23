@@ -237,7 +237,7 @@ export default function PersonProfilePage({ params }: PageProps) {
           <h3 className="mb-4 text-lg font-semibold">1. Dados pessoais</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome completo"><input required className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-            <Field label="Como deseja ser chamado"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
+            <Field label="Como e conhecido"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
             <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="E-mail"><input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
             <div className="col-span-2 flex items-end gap-3">
