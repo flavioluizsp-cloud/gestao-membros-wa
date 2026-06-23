@@ -103,27 +103,14 @@ export default function MembroHomePage() {
         <Card>
           <h3 className="mb-3 font-semibold text-ink">Minha igreja</h3>
           <div className="space-y-2 text-sm">
-            {person.family_group ? (
-              <div>
-                <p className="mb-2 text-ink/60">Grupo Familiar</p>
-                <Link
-                  href={`/segmentos/grupo-familiar/${encodeURIComponent(person.family_group)}`}
-                  className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{person.family_group}</p>
-                    <p className="text-xs text-ink/60">Lider: {familyGroupLeader || "Nao definido"}</p>
-                  </div>
-                  <Badge>{allPeople.filter((p) => p.family_group === person.family_group).length}</Badge>
-                </Link>
+            <div className="rounded-md border border-line bg-sage/60 px-3 py-2.5">
+              <p className="text-xs font-semibold uppercase text-moss">Batismo</p>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-sm text-ink/70">Batizado em</span>
+                <span className="text-sm font-bold text-ink">{person.is_baptized ? formatDate(person.baptism_date ?? "") : "Nao informado"}</span>
               </div>
-            ) : null}
-            {person.is_baptized ? (
-              <div className="flex justify-between">
-                <span className="text-ink/60">Batizado em</span>
-                <span className="font-medium text-ink">{formatDate(person.baptism_date ?? "")}</span>
-              </div>
-            ) : null}
+              {person.baptism_church ? <p className="mt-1 text-xs text-ink/60">{person.baptism_church}</p> : null}
+            </div>
             {(person.departments ?? []).length > 0 ? (
               <div>
                 <p className="mb-2 text-ink/60">Departamentos</p>
@@ -145,6 +132,21 @@ export default function MembroHomePage() {
                     );
                   })}
                 </div>
+              </div>
+            ) : null}
+            {person.family_group ? (
+              <div>
+                <p className="mb-2 text-ink/60">Grupo Familiar</p>
+                <Link
+                  href={`/segmentos/grupo-familiar/${encodeURIComponent(person.family_group)}`}
+                  className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{person.family_group}</p>
+                    <p className="text-xs text-ink/60">Lider: {familyGroupLeader || "Nao definido"}</p>
+                  </div>
+                  <Badge>{allPeople.filter((p) => p.family_group === person.family_group).length}</Badge>
+                </Link>
               </div>
             ) : null}
           </div>
