@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, CheckSquare, HeartHandshake, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
+import { SignupLinksCard } from "@/components/signup-links-card";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { useRouter } from "next/navigation"
@@ -83,21 +84,7 @@ export default function DashboardPage() {
         description="Visao rapida da igreja, acompanhamento pastoral e proximos passos."
         action={<LinkButton href="/pessoas">Cadastrar pessoa</LinkButton>}
       />
-      <Card className="mb-6">
-        <h3 className="font-semibold text-ink">Links rapidos</h3>
-        <p className="mt-1 text-sm text-ink/60">Use estes links para receber cadastros e revisar novas solicitacoes.</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <Link href="/cadastro" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
-            Cadastro completo
-          </Link>
-          <Link href="/visitante/cadastro" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
-            Cadastro de visitante
-          </Link>
-          <Link href="/admin/aprovacoes" className="rounded-md bg-moss px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-moss/90">
-            Aprovar cadastros
-          </Link>
-        </div>
-      </Card>
+      <SignupLinksCard showApprovals />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map(([label, value, Icon]) => (
           <Card key={label}>
