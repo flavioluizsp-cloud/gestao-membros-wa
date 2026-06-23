@@ -21,13 +21,16 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     ["Eventos", "/eventos"],
     ["Relatorios", "/relatorios"],
     ["Permissoes", "/permissoes"],
-    ["Aprovacoes", "/admin/aprovacoes"]
+    ["Aprovacoes", "/admin/aprovacoes"],
+    ["Privacidade", "/privacidade"]
   ];
   const leaderNav = [
-    ["Meu painel", "/lider"]
+    ["Meu painel", "/lider"],
+    ["Privacidade", "/privacidade"]
   ];
   const memberNav = [
-    ["Meu perfil", "/membro"]
+    ["Meu perfil", "/membro"],
+    ["Privacidade", "/privacidade"]
   ];
   const nav = access?.isAdminLike ? adminNav : access?.isLeader ? leaderNav : access?.isMember ? memberNav : [["Entrar", "/login"]];
 
