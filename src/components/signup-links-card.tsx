@@ -26,15 +26,15 @@ export function SignupLinksCard({ showApprovals = false }: { showApprovals?: boo
       <p className="mt-1 text-sm text-ink/60">Copie e envie quando quiser convidar alguem para preencher os dados.</p>
       <div className="mt-4 grid gap-2">
         {links.map((item) => (
-          <div key={item.url} className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
-            <div className="min-w-0 flex-1">
+          <div key={item.url} className="grid gap-2 rounded-md border border-line bg-white px-3 py-2 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-ink">{item.label}</p>
               <p className="truncate text-xs text-ink/50">{item.url}</p>
             </div>
             <button
               type="button"
               onClick={() => copyLink(item.url, item.label)}
-              className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:bg-sage"
+              className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:bg-sage sm:w-auto"
             >
               <Copy className="h-3.5 w-3.5" />
               {copied === item.label ? "Copiado" : "Copiar"}
