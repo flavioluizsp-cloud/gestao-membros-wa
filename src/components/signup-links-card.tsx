@@ -4,11 +4,9 @@ import { useState } from "react";
 import { Copy } from "lucide-react";
 import { Card } from "@/components/ui";
 
-const siteUrl = "https://gestao-membros-wa.vercel.app";
-
 const links = [
-  { label: "Cadastro de membro", url: `${siteUrl}/novo-membro` },
-  { label: "Cadastro de visitante", url: `${siteUrl}/registro-visitante` }
+  { label: "Cadastro de membro", url: "https://bit.ly/membroscadastro" },
+  { label: "Cadastro de visitante", url: "https://bit.ly/visitanteregistro" }
 ];
 
 export function SignupLinksCard({ showApprovals = false }: { showApprovals?: boolean }) {
