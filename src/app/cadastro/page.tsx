@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
 import { departmentOptions, familyGroupOptions } from "@/lib/labels";
-import { membrosDb } from "@/lib/supabase";
+import { membrosDb, supabase } from "@/lib/supabase";
 import type { FamilyMember, MaritalStatus } from "@/lib/types";
 
 const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
@@ -53,6 +53,8 @@ export default function CadastroPage() {
     preferred_name: "",
     phone: "",
     email: "",
+    password: "",
+    confirm_password: "",
     birth_date: "",
     birth_city: "",
     marital_status: "" as MaritalStatus,
@@ -85,15 +87,38 @@ export default function CadastroPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!membrosDb) return;
+    if (!membrosDb || !supabase) return;
     setLoading(true);
     setError("");
+
+    if (form.password.length < 6) {
+      setError("A senha precisa ter pelo menos 6 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    if (form.password !== form.confirm_password) {
+      setError("As senhas nao conferem.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
 
     const payload = {
       name: form.name,
       preferred_name: form.preferred_name || null,
       phone: form.phone,
-      email: form.email || null,
+      email: form.email,
       birth_date: form.birth_date || null,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
@@ -110,9 +135,19 @@ export default function CadastroPage() {
       pending_approval: true,
     };
 
-    const { error: err } = await membrosDb.from("people").insert(payload);
+    const { data: personData, error: err } = await membrosDb.from("people").insert(payload).select("id").single();
     setLoading(false);
     if (err) { setError(err.message); return; }
+
+    if (authData.user?.id && personData?.id) {
+      await membrosDb.from("user_profiles").upsert({
+        auth_user_id: authData.user.id,
+        person_id: personData.id,
+        role: "membro",
+        is_global_leader: false
+      }, { onConflict: "auth_user_id" });
+    }
+
     setSubmitted(true);
   }
 
@@ -122,7 +157,7 @@ export default function CadastroPage() {
         <div className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center shadow-soft">
           <div className="mb-4 text-4xl">🎉</div>
           <h2 className="text-xl font-bold text-ink">Cadastro enviado!</h2>
-          <p className="mt-2 text-sm text-ink/60">Suas informações foram recebidas e serão analisadas pela liderança. Em breve você receberá um retorno.</p>
+          <p className="mt-2 text-sm text-ink/60">Seu login foi criado e suas informacoes foram recebidas. A lideranca ainda precisa aprovar seu cadastro para liberar o acesso completo.</p>
         </div>
       </div>
     );
@@ -145,7 +180,9 @@ export default function CadastroPage() {
               <Field label="Nome completo"><input required className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
               <Field label="Como e conhecido"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
               <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-              <Field label="E-mail"><input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+              <Field label="E-mail"><input required className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+              <Field label="Senha de acesso"><input required className={inputClass} type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
+              <Field label="Confirmar senha"><input required className={inputClass} type="password" minLength={6} value={form.confirm_password} onChange={(e) => setForm({ ...form, confirm_password: e.target.value })} /></Field>
               <Field label="Data de nascimento"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
               <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
               <div className="sm:col-span-2">

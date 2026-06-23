@@ -43,6 +43,7 @@ export type Person = {
   desired_departments: string[] | null;
   visitor_origin: VisitorOrigin | null;
   visitor_status: VisitorStatus | null;
+  pending_approval: boolean | null;
   created_at: string;
 };
 

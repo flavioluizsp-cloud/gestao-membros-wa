@@ -42,6 +42,17 @@ export default function MembroHomePage() {
 
   const familyGroupLeader = person.family_group_leader;
 
+  if (person.pending_approval) {
+    return (
+      <PageShell>
+        <div className="rounded-lg border border-line bg-white p-8 text-center shadow-soft">
+          <h2 className="text-xl font-bold text-ink">Cadastro aguardando aprovacao</h2>
+          <p className="mt-2 text-sm text-ink/60">Recebemos seus dados. A lideranca ainda precisa revisar e liberar seu acesso completo.</p>
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell>
       <div className="mb-6">
