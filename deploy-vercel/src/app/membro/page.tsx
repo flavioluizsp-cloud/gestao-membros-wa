@@ -119,10 +119,20 @@ export default function MembroHomePage() {
             {(person.departments ?? []).length > 0 && (
               <div>
                 <p className="mb-1 text-ink/60">Departamentos</p>
-                <div className="flex flex-wrap gap-1">
-                  {(person.departments ?? []).map((dep) => (
-                    <span key={dep} className="rounded-md bg-sage px-2 py-0.5 text-xs font-semibold text-moss">{dep}</span>
-                  ))}
+                <div className="space-y-2">
+                  {(person.departments ?? []).map((dep) => { const count = allPeople.filter((p) => p.departments?.includes(dep)).length; return (
+                    <Link
+                        key={dep}
+                        href={`/segmentos/departamento/${encodeURIComponent(dep)}`}
+                        className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-ink">{dep}</p>
+                          <p className="text-xs text-ink/60">Participante</p>
+                        </div>
+                        <Badge>{count}</Badge>
+                      </Link>
+                  ); })}
                 </div>
               </div>
             )}
@@ -159,4 +169,5 @@ export default function MembroHomePage() {
     </PageShell>
   );
 }
+
 
