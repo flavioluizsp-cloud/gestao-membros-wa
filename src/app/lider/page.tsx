@@ -60,6 +60,12 @@ export default function LiderHomePage() {
   const leaderName = access?.person?.preferred_name || access?.person?.name || "Lider";
   const familyGroup = access?.person?.family_group || "Sem grupo familiar cadastrado";
   const leadershipSegments = buildLeadershipSegments(access, people, allPeople, departmentAssignments);
+  const personName = access?.person?.name;
+  const personPreferredName = access?.person?.preferred_name;
+  const familyGroupsLed = allPeople
+    .filter((item) => item.family_group && isLeaderNameMatch(item.family_group_leader, personName, personPreferredName))
+    .map((item) => item.family_group as string)
+    .filter((value, index, self) => self.indexOf(value) === index);
 
   return (
     <PageShell>
