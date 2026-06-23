@@ -118,6 +118,39 @@ export default function LiderHomePage() {
             ) : null}
           </div>
         </Card>
+        {familyGroupsLed.length > 0 ? (
+          <Card>
+            <h3 className="mb-3 font-semibold">Grupos Familiares que lidero</h3>
+            <div className="space-y-2">
+              {familyGroupsLed.map((groupName) => {
+                const count = allPeople.filter((item) => item.family_group === groupName).length;
+                return (
+                  <Link
+                    key={`grupo-${groupName}`}
+                    href={`/segmentos/grupo-familiar/${encodeURIComponent(groupName)}`}
+                    className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{groupName}</p>
+                      <p className="text-xs text-ink/60">Grupo Familiar</p>
+                    </div>
+                    <Badge>{count}</Badge>
+                  </Link>
+                );
+              })}
+            </div>
+          </Card>
+        ) : null}
+
+        {access?.person?.family_group ? (
+          <Card>
+            <h3 className="mb-3 font-semibold">Meu Grupo Familiar</h3>
+            <div className="rounded-md border border-line px-3 py-2.5">
+              <p className="text-sm font-semibold text-ink">{access.person.family_group}</p>
+              <p className="mt-1 text-xs text-ink/60">Lider: {access.person.family_group_leader || "Nao informado"}</p>
+            </div>
+          </Card>
+        ) : null}
 
         <Card>
           <h3 className="mb-3 font-semibold">Aniversariantes da semana</h3>
