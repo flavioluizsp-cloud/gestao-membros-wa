@@ -97,7 +97,7 @@ export default function SegmentPage({ params }: PageProps) {
       <PageHeader
         title={name || "Segmento"}
         description={`${segmentTypeLabel(type)} - Lider: ${leader}`}
-        action={<Link className="rounded-md border border-line px-3 py-2 text-sm font-semibold" href="/">Voltar ao Dashboard</Link>}
+        action={<Link className="inline-flex w-full items-center justify-center rounded-md bg-moss px-4 py-2.5 text-sm font-bold text-white shadow-soft hover:bg-moss/90 sm:w-auto" href="/">Voltar ao Dashboard</Link>}
       />
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
