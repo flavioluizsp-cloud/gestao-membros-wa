@@ -10,7 +10,7 @@ import { membrosDb, supabase } from "@/lib/supabase";
 import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { useRouter } from "next/navigation"
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import type { ChurchEvent, DepartmentSetting, PastoralTask, Person } from "@/lib/types";
+import type { ChurchEvent, DepartmentAssignment, PastoralTask, Person } from "@/lib/types";
 
 type Segment = {
   key: string;
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [events, setEvents] = useState<ChurchEvent[]>([]);
-  const [departmentSettings, setDepartmentSettings] = useState<DepartmentSetting[]>([]);
+  const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -36,12 +36,12 @@ export default function DashboardPage() {
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
         membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
         membrosDb.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
-        membrosDb.from("department_settings").select("*")
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)")
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
       setTasks((tasksResult.data ?? []) as PastoralTask[]);
       setEvents((eventsResult.data ?? []) as ChurchEvent[]);
-      setDepartmentSettings((departmentsResult.data ?? []) as DepartmentSetting[]);
+      setDepartmentAssignments((departmentsResult.data ?? []) as DepartmentAssignment[]);
     }
 
     loadDashboardData();
@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const departments = buildSegments(
     people,
     (person) => person.departments ?? [],
-    (name, members) => ({ key: `dep-${name}`, title: name, subtitle: findSegmentLeader(name, members, departmentSettings, people), people: members })
+    (name, members) => ({ key: `dep-${name}`, title: name, subtitle: findSegmentLeader(name, members, departmentAssignments), people: members })
   );
   const familyGroups = buildSegments(
     people.filter((person) => person.family_group),
@@ -133,10 +133,12 @@ export default function DashboardPage() {
   );
 }
 
-function findSegmentLeader(departmentName: string, members: Person[], departmentSettings: DepartmentSetting[], allPeople: Person[]) {
-  const setting = departmentSettings.find((department) => department.name === departmentName);
-  const configuredLeader = setting?.leader_person_id ? allPeople.find((person) => person.id === setting.leader_person_id) : null;
-  if (configuredLeader) return configuredLeader.preferred_name || configuredLeader.name;
+function findSegmentLeader(departmentName: string, members: Person[], departmentAssignments: DepartmentAssignment[]) {
+  const configuredLeaders = departmentAssignments
+    .filter((assignment) => assignment.department_name === departmentName && assignment.role === "lider")
+    .map((assignment) => assignment.people?.preferred_name || assignment.people?.name)
+    .filter(Boolean);
+  if (configuredLeaders.length > 0) return configuredLeaders.join(" / ");
   const leader = members.find((person) => person.department_roles?.includes("Lider"));
   const coLeader = members.find((person) => person.department_roles?.includes("Co-Lider"));
   if (leader && coLeader) return `${leader.name} / ${coLeader.name}`;

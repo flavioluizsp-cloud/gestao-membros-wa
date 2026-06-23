@@ -5,11 +5,14 @@ import { Badge, Card, Field, inputClass, PageHeader, PageShell } from "@/compone
 import { getAccessContext } from "@/lib/access";
 import { departmentOptions } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
-import type { DepartmentSetting, Person } from "@/lib/types";
+import type { DepartmentAssignment, DepartmentAssignmentRole, DepartmentSetting, Person } from "@/lib/types";
 
 export default function DepartmentsPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [settings, setSettings] = useState<DepartmentSetting[]>([]);
+  const [assignments, setAssignments] = useState<DepartmentAssignment[]>([]);
+  const [selectedPeople, setSelectedPeople] = useState<Record<string, string>>({});
+  const [selectedRoles, setSelectedRoles] = useState<Record<string, DepartmentAssignmentRole>>({});
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -22,9 +25,10 @@ export default function DepartmentsPage() {
         return;
       }
 
-      const [peopleResult, settingsResult] = await Promise.all([
+      const [peopleResult, settingsResult, assignmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
-        membrosDb.from("department_settings").select("*").order("name")
+        membrosDb.from("department_settings").select("*").order("name"),
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").order("created_at")
       ]);
 
       const existingSettings = (settingsResult.data ?? []) as DepartmentSetting[];
@@ -38,6 +42,7 @@ export default function DepartmentsPage() {
       }
 
       setPeople((peopleResult.data ?? []) as Person[]);
+      setAssignments((assignmentsResult.data ?? []) as DepartmentAssignment[]);
       setLoading(false);
     }
 
@@ -46,20 +51,57 @@ export default function DepartmentsPage() {
 
   const peopleById = useMemo(() => new Map(people.map((person) => [person.id, person])), [people]);
 
-  async function updateDepartment(setting: DepartmentSetting, values: Partial<DepartmentSetting>) {
+  async function addAssignment(departmentName: string) {
     if (!membrosDb) return;
-    const next = { ...setting, ...values, updated_at: new Date().toISOString() };
-    setSettings((current) => current.map((item) => item.id === setting.id ? next : item));
-    const { error } = await membrosDb
-      .from("department_settings")
-      .update({
-        leader_person_id: next.leader_person_id || null,
-        co_leader_person_ids: next.co_leader_person_ids ?? [],
-        updated_at: next.updated_at
-      })
-      .eq("id", setting.id);
+    const personId = selectedPeople[departmentName];
+    const role = selectedRoles[departmentName] ?? "lider";
+    if (!personId) {
+      showMessage("Escolha uma pessoa para adicionar.");
+      return;
+    }
 
-    setMessage(error ? error.message : "Departamento atualizado.");
+    const existing = assignments.find((assignment) => assignment.department_name === departmentName && assignment.person_id === personId);
+    const person = peopleById.get(personId);
+    const payload = { department_name: departmentName, person_id: personId, role };
+
+    const { data, error } = existing
+      ? await membrosDb.from("department_assignments").update({ role }).eq("id", existing.id).select("*, people(id, name, preferred_name, phone)").single()
+      : await membrosDb.from("department_assignments").insert(payload).select("*, people(id, name, preferred_name, phone)").single();
+
+    if (!error && data) {
+      const next = data as DepartmentAssignment;
+      setAssignments((current) => existing
+        ? current.map((assignment) => assignment.id === existing.id ? next : assignment)
+        : [...current, next]
+      );
+      setSelectedPeople((current) => ({ ...current, [departmentName]: "" }));
+    } else if (!error && !data) {
+      const fallback = {
+        id: existing?.id ?? `${departmentName}-${personId}`,
+        department_name: departmentName,
+        person_id: personId,
+        role,
+        created_at: new Date().toISOString(),
+        people: person ? { id: person.id, name: person.name, preferred_name: person.preferred_name, phone: person.phone } : null
+      } as DepartmentAssignment;
+      setAssignments((current) => existing
+        ? current.map((assignment) => assignment.id === existing.id ? fallback : assignment)
+        : [...current, fallback]
+      );
+    }
+
+    showMessage(error ? error.message : role === "lider" ? "Lider adicionado ao departamento." : "Co-lider adicionado ao departamento.");
+  }
+
+  async function removeAssignment(assignment: DepartmentAssignment) {
+    if (!membrosDb) return;
+    const { error } = await membrosDb.from("department_assignments").delete().eq("id", assignment.id);
+    if (!error) setAssignments((current) => current.filter((item) => item.id !== assignment.id));
+    showMessage(error ? error.message : "Atribuicao removida.");
+  }
+
+  function showMessage(text: string) {
+    setMessage(text);
     window.setTimeout(() => setMessage(""), 2500);
   }
 
@@ -69,7 +111,7 @@ export default function DepartmentsPage() {
     <PageShell>
       <PageHeader
         title="Departamentos"
-        description="Defina o lider principal e os co-lideres de cada departamento. Apenas o lider principal sera usado depois para acesso de gestao."
+        description="Defina lideres e co-lideres por departamento. Depois, somente quem estiver como lider tera acesso a gestao do departamento."
       />
 
       {message ? (
@@ -82,49 +124,87 @@ export default function DepartmentsPage() {
         {departmentOptions.map((departmentName) => {
           const setting = settings.find((item) => item.name === departmentName);
           if (!setting) return null;
-          const leader = setting.leader_person_id ? peopleById.get(setting.leader_person_id) : null;
-          const coLeaders = (setting.co_leader_person_ids ?? []).map((id) => peopleById.get(id)).filter(Boolean) as Person[];
+          const departmentAssignments = assignments.filter((assignment) => assignment.department_name === departmentName);
+          const leaders = departmentAssignments.filter((assignment) => assignment.role === "lider");
+          const coLeaders = departmentAssignments.filter((assignment) => assignment.role === "co_lider");
+          const availablePeople = people.filter((person) => !departmentAssignments.some((assignment) => assignment.person_id === person.id));
 
           return (
             <Card key={departmentName}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-ink">{departmentName}</h3>
-                  <p className="mt-1 text-sm text-ink/60">Lider: {leader?.preferred_name || leader?.name || "Nao definido"}</p>
+                  <p className="mt-1 text-sm text-ink/60">
+                    Lideres: {leaders.length > 0 ? leaders.map((assignment) => assignment.people?.preferred_name || assignment.people?.name || peopleById.get(assignment.person_id)?.name).join(" / ") : "Nao definido"}
+                  </p>
                 </div>
-                <Badge>{coLeaders.length} co-lider(es)</Badge>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge>{leaders.length} lider(es)</Badge>
+                  <Badge>{coLeaders.length} co-lider(es)</Badge>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3">
-                <Field label="Lider principal">
-                  <select
-                    className={inputClass}
-                    value={setting.leader_person_id ?? ""}
-                    onChange={(event) => updateDepartment(setting, { leader_person_id: event.target.value || null })}
+                <div className="grid gap-3 sm:grid-cols-[1fr_150px_auto]">
+                  <Field label="Pessoa">
+                    <select
+                      className={inputClass}
+                      value={selectedPeople[departmentName] ?? ""}
+                      onChange={(event) => setSelectedPeople((current) => ({ ...current, [departmentName]: event.target.value }))}
+                    >
+                      <option value="">Escolha uma pessoa</option>
+                      {availablePeople.map((person) => (
+                        <option key={person.id} value={person.id}>{person.name}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Funcao">
+                    <select
+                      className={inputClass}
+                      value={selectedRoles[departmentName] ?? "lider"}
+                      onChange={(event) => setSelectedRoles((current) => ({ ...current, [departmentName]: event.target.value as DepartmentAssignmentRole }))}
+                    >
+                      <option value="lider">Lider</option>
+                      <option value="co_lider">Co-lider</option>
+                    </select>
+                  </Field>
+                  <button
+                    type="button"
+                    onClick={() => addAssignment(departmentName)}
+                    className="self-end rounded-md bg-moss px-4 py-2 text-sm font-semibold text-white hover:bg-moss/90"
                   >
-                    <option value="">Sem lider definido</option>
-                    {people.map((person) => (
-                      <option key={person.id} value={person.id}>{person.name}</option>
-                    ))}
-                  </select>
-                </Field>
+                    Adicionar
+                  </button>
+                </div>
 
-                <Field label="Co-lideres">
-                  <select
-                    multiple
-                    className={`${inputClass} min-h-32`}
-                    value={setting.co_leader_person_ids ?? []}
-                    onChange={(event) => {
-                      const values = Array.from(event.target.selectedOptions).map((option) => option.value);
-                      updateDepartment(setting, { co_leader_person_ids: values });
-                    }}
-                  >
-                    {people.map((person) => (
-                      <option key={person.id} value={person.id}>{person.name}</option>
-                    ))}
-                  </select>
-                </Field>
-                <p className="text-xs text-ink/55">Dica: segure Ctrl para selecionar mais de um co-lider no computador.</p>
+                <div className="rounded-md border border-line bg-white p-3">
+                  <p className="mb-2 text-sm font-semibold text-ink">Pessoas atribuidas</p>
+                  <div className="space-y-2">
+                    {departmentAssignments.map((assignment) => {
+                      const person = assignment.people ?? peopleById.get(assignment.person_id);
+                      return (
+                        <div key={assignment.id} className="flex flex-col gap-2 rounded-md border border-line px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-medium">{person?.preferred_name || person?.name || "Pessoa removida"}</p>
+                            <p className="text-xs text-ink/60">{assignment.role === "lider" ? "Lider do departamento" : "Co-lider"}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge>{assignment.role === "lider" ? "Lider" : "Co-lider"}</Badge>
+                            <button
+                              type="button"
+                              onClick={() => removeAssignment(assignment)}
+                              className="rounded-md border border-red-200 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-50"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {departmentAssignments.length === 0 ? <p className="text-sm text-ink/55">Nenhuma pessoa atribuida ainda.</p> : null}
+                  </div>
+                </div>
+
               </div>
             </Card>
           );

@@ -7,6 +7,7 @@ export type TemplateKey = "boas_vindas" | "aniversario" | "convite_culto" | "aco
 export type UserRole = "admin" | "pastor" | "lider" | "membro";
 export type ScopeType = "grupo_familiar" | "departamento";
 export type MaritalStatus = "solteiro" | "casado" | "uniao_estavel" | "juntos_sem_casar" | "";
+export type DepartmentAssignmentRole = "lider" | "co_lider";
 
 export type FamilyMember = {
   name: string;
@@ -132,6 +133,15 @@ export type DepartmentSetting = {
   created_at: string;
   updated_at: string | null;
   leader?: Pick<Person, "id" | "name" | "preferred_name" | "phone"> | null;
+};
+
+export type DepartmentAssignment = {
+  id: string;
+  department_name: string;
+  person_id: string;
+  role: DepartmentAssignmentRole;
+  created_at: string;
+  people?: Pick<Person, "id" | "name" | "preferred_name" | "phone"> | null;
 };
 
 export type AccessContext = {
