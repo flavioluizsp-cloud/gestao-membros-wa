@@ -19,7 +19,8 @@ export default function LoginPage() {
       setMessage(error.message);
       return;
     }
-    router.push("/");
+    router.replace("/");
+    router.refresh();
   }
 
   return (

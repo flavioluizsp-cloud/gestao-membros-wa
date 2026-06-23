@@ -12,6 +12,7 @@ import { AuthButton } from "./auth-button";
 export function PageShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [access, setAccess] = useState<AccessContext | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
   const adminNav = [
     ["Dashboard", "/"],
     ["Pessoas", "/pessoas"],
@@ -36,8 +37,13 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   const nav = access?.isAdminLike ? adminNav : access?.isLeader ? leaderNav : access?.isMember ? memberNav : [["Entrar", "/login"]];
 
   useEffect(() => {
-    getAccessContext().then(setAccess);
+    getAccessContext().then((context) => {
+      setAccess(context);
+      setAccessLoading(false);
+    });
   }, []);
+
+  const navItems = accessLoading ? [] : nav;
 
   return (
     <div className="min-h-screen">
@@ -47,13 +53,13 @@ export function PageShell({ children }: { children: React.ReactNode }) {
           <p className="text-xs font-semibold uppercase tracking-wide text-moss/70">ABELARDO LUZ</p><p className="mt-0.5 text-xl font-bold text-ink">Minha Igreja</p>
         </div>
         <nav className="space-y-1">
-          {nav.map(([label, href]) => (
+          {navItems.map(([label, href]) => (
             <Link key={href} href={href} className="block rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-sage">
               {label}
             </Link>
           ))}
         </nav>
-        <AuthButton />
+        {!accessLoading ? <AuthButton /> : null}
       </aside>
       <main className="lg:pl-64">
         <div className="sticky top-0 z-30 border-b border-line bg-white px-4 py-3 shadow-sm lg:hidden">
@@ -76,7 +82,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
 
           {mobileMenuOpen ? (
             <nav id="mobile-menu" className="mt-3 grid gap-2 border-t border-line pt-3">
-              {nav.map(([label, href]) => (
+              {navItems.map(([label, href]) => (
                 <Link
                   key={href}
                   href={href}
@@ -86,7 +92,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
                   {label}
                 </Link>
               ))}
-              <AuthButton />
+              {!accessLoading ? <AuthButton /> : null}
             </nav>
           ) : null}
         </div>

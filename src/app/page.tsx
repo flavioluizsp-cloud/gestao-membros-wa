@@ -25,13 +25,23 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [events, setEvents] = useState<ChurchEvent[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboardData() {
-      if (!supabase || !membrosDb) return;
+      if (!supabase || !membrosDb) {
+        setLoading(false);
+        return;
+      }
       const accessContext = await getAccessContext();
-      if (accessContext.isMember) { router.replace("/membro"); return; }
-      if (accessContext.isLeader) { router.replace("/lider"); return; }
+      if (accessContext.isMember) {
+        router.replace("/membro");
+        return;
+      }
+      if (accessContext.isLeader) {
+        router.replace("/lider");
+        return;
+      }
       const [peopleResult, tasksResult, eventsResult, departmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
         membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
@@ -42,10 +52,22 @@ export default function DashboardPage() {
       setTasks((tasksResult.data ?? []) as PastoralTask[]);
       setEvents((eventsResult.data ?? []) as ChurchEvent[]);
       setDepartmentAssignments((departmentsResult.data ?? []) as DepartmentAssignment[]);
+      setLoading(false);
     }
 
     loadDashboardData();
-  }, []);
+  }, [router]);
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <p className="text-sm font-semibold text-ink">Carregando seus dados...</p>
+          <p className="mt-1 text-sm text-ink/60">Aguarde um instante enquanto abrimos o painel correto.</p>
+        </div>
+      </PageShell>
+    );
+  }
 
   const month = new Date().getMonth();
   const visitorsThisMonth = people.filter((p) => p.status === "visitante" && new Date(p.created_at).getMonth() === month);
