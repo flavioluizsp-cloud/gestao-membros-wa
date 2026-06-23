@@ -24,7 +24,7 @@ export default function MembroHomePage() {
       if (ctx.person?.id && membrosDb) {
         const [{ data }, { data: allPeopleData }] = await Promise.all([
           membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
-          membrosDb.from("people").select("id, departments"),
+          membrosDb.from("people").select("id, departments")
         ]);
         setPerson(data as Person | null);
         setAllPeople((allPeopleData ?? []) as Person[]);
@@ -39,8 +39,8 @@ export default function MembroHomePage() {
   if (!person) return (
     <PageShell>
       <div className="rounded-lg border border-dashed border-line bg-white p-8 text-center">
-        <h3 className="font-semibold text-ink">Perfil nÃÂ£o encontrado</h3>
-        <p className="mt-1 text-sm text-ink/60">Seu usuÃÂ¡rio ainda nÃÂ£o estÃÂ¡ vinculado a um cadastro. Fale com a lideranÃÂ§a.</p>
+        <h3 className="font-semibold text-ink">Perfil nao encontrado</h3>
+        <p className="mt-1 text-sm text-ink/60">Seu usuario ainda nao esta vinculado a um cadastro. Fale com a lideranca.</p>
       </div>
     </PageShell>
   );
@@ -61,7 +61,7 @@ export default function MembroHomePage() {
   return (
     <PageShell>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-ink">OlÃÂ¡, {person.preferred_name || person.name} Ã°Å¸ââ¹</h2>
+        <h2 className="text-2xl font-bold text-ink">Ola, {person.preferred_name || person.name.trim().split(" ")[0]}</h2>
         <p className="mt-1 text-sm text-ink/65">Bem-vindo ao Portal do Membro.</p>
         <Link href={`/pessoas/${person.id}`} className="mt-4 inline-flex w-full justify-center rounded-md bg-moss px-3 py-2.5 text-sm font-semibold text-white hover:bg-moss/90 sm:w-auto">
           Editar meus dados
@@ -80,18 +80,18 @@ export default function MembroHomePage() {
               <span className="text-ink/60">WhatsApp</span>
               <span className="font-medium text-ink">{person.phone}</span>
             </div>
-            {person.email && (
+            {person.email ? (
               <div className="flex justify-between">
                 <span className="text-ink/60">E-mail</span>
                 <span className="font-medium text-ink">{person.email}</span>
               </div>
-            )}
-            {person.birth_date && (
+            ) : null}
+            {person.birth_date ? (
               <div className="flex justify-between">
                 <span className="text-ink/60">Nascimento</span>
                 <span className="font-medium text-ink">{formatDate(person.birth_date)}</span>
               </div>
-            )}
+            ) : null}
             <div className="flex justify-between">
               <span className="text-ink/60">Status</span>
               <span className="font-medium text-moss">{personStatusLabels[person.status]}</span>
@@ -102,30 +102,32 @@ export default function MembroHomePage() {
         <Card>
           <h3 className="mb-3 font-semibold text-ink">Minha igreja</h3>
           <div className="space-y-2 text-sm">
-            {person.family_group && (
+            {person.family_group ? (
               <div className="flex justify-between">
                 <span className="text-ink/60">Grupo Familiar</span>
                 <span className="font-medium text-ink">{person.family_group}</span>
               </div>
-            )}
-            {familyGroupLeader && (
+            ) : null}
+            {familyGroupLeader ? (
               <div className="flex justify-between">
-                <span className="text-ink/60">LÃÂ­der do GF</span>
+                <span className="text-ink/60">Lider do GF</span>
                 <span className="font-medium text-ink">{familyGroupLeader}</span>
               </div>
-            )}
-            {person.is_baptized && (
+            ) : null}
+            {person.is_baptized ? (
               <div className="flex justify-between">
                 <span className="text-ink/60">Batizado em</span>
                 <span className="font-medium text-ink">{formatDate(person.baptism_date ?? "")}</span>
               </div>
-            )}
-            {(person.departments ?? []).length > 0 && (
+            ) : null}
+            {(person.departments ?? []).length > 0 ? (
               <div>
                 <p className="mb-2 text-ink/60">Departamentos</p>
                 <div className="space-y-2">
-                  {(person.departments ?? []).map((dep) => { const count = allPeople.filter((p) => p.departments?.includes(dep)).length; return (
-                    <Link
+                  {(person.departments ?? []).map((dep) => {
+                    const count = allPeople.filter((p) => p.departments?.includes(dep)).length;
+                    return (
+                      <Link
                         key={dep}
                         href={`/segmentos/departamento/${encodeURIComponent(dep)}`}
                         className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
@@ -136,31 +138,32 @@ export default function MembroHomePage() {
                         </div>
                         <Badge>{count}</Badge>
                       </Link>
-                  ); })}
+                    );
+                  })}
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </Card>
 
-        {(person.family_members ?? []).length > 0 && (
+        {(person.family_members ?? []).length > 0 ? (
           <Card className="md:col-span-2">
-            <h3 className="mb-3 font-semibold text-ink">Minha famÃÂ­lia</h3>
+            <h3 className="mb-3 font-semibold text-ink">Minha familia</h3>
             <div className="grid gap-2 sm:grid-cols-2">
               {(person.family_members ?? []).map((member, index) => (
                 <div key={index} className="rounded-md border border-line px-3 py-2.5">
                   <p className="text-sm font-semibold text-ink">{member.name}</p>
-                  <p className="text-xs text-ink/60">{member.relationship}{member.birth_date ? ` ÃÂ· ${formatDate(member.birth_date)}` : ""}</p>
+                  <p className="text-xs text-ink/60">{member.relationship}{member.birth_date ? ` - ${formatDate(member.birth_date)}` : ""}</p>
                 </div>
               ))}
             </div>
           </Card>
-        )}
+        ) : null}
 
-        {person.assigned_leader && (
+        {person.assigned_leader ? (
           <Card>
             <h3 className="mb-3 font-semibold text-ink">Meu acompanhamento</h3>
-            <p className="text-sm text-ink/60">ResponsÃÂ¡vel por vocÃÂª</p>
+            <p className="text-sm text-ink/60">Responsavel por voce</p>
             <div className="mt-2 flex items-center justify-between rounded-md border border-line px-3 py-2.5">
               <p className="text-sm font-semibold text-ink">{person.assigned_leader}</p>
               <a href={buildWhatsAppUrl(person.phone, `Ola ${person.preferred_name || person.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
@@ -168,10 +171,8 @@ export default function MembroHomePage() {
               </a>
             </div>
           </Card>
-        )}
+        ) : null}
       </div>
     </PageShell>
   );
 }
-
-
