@@ -260,7 +260,7 @@ export default function PersonProfilePage({ params }: PageProps) {
 
           <div className="mt-4 rounded-md border border-line p-3 sm:p-4">
             <h4 className="font-semibold text-ink">Dados da familia</h4>
-            <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a esta pessoa.</p>
+            <p className="mt-1 text-sm text-ink/60">Cadastre conjuge, filhos ou outros familiares ligados a voce.</p>
 
             {/* Cards dos familiares já salvos */}
             {form.family_members.length > 0 && (
@@ -339,7 +339,7 @@ export default function PersonProfilePage({ params }: PageProps) {
         <Card>
           <h3 className="mb-4 text-lg font-semibold">2. Dados da igreja</h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Pessoa batizada">
+            <Field label="Voce e batizado?">
               <select className={inputClass} value={form.is_baptized ? "sim" : "nao"} onChange={(e) => setForm({ ...form, is_baptized: e.target.value === "sim" })}>
                 <option value="nao">Nao</option>
                 <option value="sim">Sim</option>
