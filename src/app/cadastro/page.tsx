@@ -44,9 +44,19 @@ function getFamilyGroupLeader(group: string) {
 
 function formatDateBR(dateStr: string) {
   if (!dateStr) return "";
+  if (dateStr.includes("/")) return dateStr;
   const [year, month, day] = dateStr.split("-");
   if (!day) return "";
   return `${day}/${month}/${year}`;
+}
+
+function normalizeDate(dateStr: string) {
+  const value = dateStr.trim();
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const [day, month, year] = value.split("/");
+  if (!day || !month || !year) return null;
+  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 export default function CadastroPage() {
@@ -79,7 +89,7 @@ export default function CadastroPage() {
 
   function confirmNewMember() {
     if (!newMember.name.trim()) return;
-    setForm({ ...form, family_members: [...form.family_members, newMember] });
+    setForm({ ...form, family_members: [...form.family_members, { ...newMember, birth_date: normalizeDate(newMember.birth_date) ?? "" }] });
     setNewMember(emptyMember);
     setShowFamilyForm(false);
   }
@@ -122,18 +132,18 @@ export default function CadastroPage() {
       preferred_name: form.preferred_name || null,
       phone: form.phone,
       email: form.email,
-      birth_date: form.birth_date || null,
+      birth_date: normalizeDate(form.birth_date),
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
       family_members: form.family_members.filter((m) => m.name.trim()),
       is_baptized: form.is_baptized,
-      baptism_date: form.baptism_date || null,
+      baptism_date: normalizeDate(form.baptism_date),
       baptism_church: form.baptism_church || null,
       baptizing_pastor: form.baptizing_pastor || null,
       family_group: form.family_group || null,
       family_group_leader: getFamilyGroupLeader(form.family_group) || null,
       departments: form.departments,
-      desired_departments: form.desired_departments,
+      desired_departments: form.desired_departments.filter((department) => !form.departments.includes(department)),
       status: "visitante" as const,
       pending_approval: true,
       privacy_consent: form.privacy_consent,
@@ -189,7 +199,7 @@ export default function CadastroPage() {
               <Field label="E-mail"><input required className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
               <Field label="Senha de acesso"><input required className={inputClass} type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
               <Field label="Confirmar senha"><input required className={inputClass} type="password" minLength={6} value={form.confirm_password} onChange={(e) => setForm({ ...form, confirm_password: e.target.value })} /></Field>
-              <Field label="Data de nascimento"><input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
+              <Field label="Data de nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.birth_date)} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
               <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
               <div className="sm:col-span-2">
                 <Field label="Situacao conjugal">
@@ -227,7 +237,7 @@ export default function CadastroPage() {
                         {relationshipOptions.map((o) => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </Field>
-                    <Field label="Data nascimento"><input className={inputClass} type="date" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} /></Field>
+                    <Field label="Data nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(newMember.birth_date ?? "")} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} /></Field>
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button type="button" onClick={confirmNewMember} className="rounded-md bg-moss px-4 py-2 text-sm font-semibold text-white">Confirmar</button>
@@ -253,7 +263,7 @@ export default function CadastroPage() {
               </Field>
               {form.is_baptized && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Data do batismo"><input className={inputClass} type="date" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
+                  <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.baptism_date)} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
                   <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
                   <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
                 </div>
@@ -267,10 +277,10 @@ export default function CadastroPage() {
                 </select>
               </Field>
               <Field label="Departamentos que participa">
-                <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values })} />
+                <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values, desired_departments: form.desired_departments.filter((department) => !values.includes(department)) })} />
               </Field>
               <Field label="Departamentos que gostaria de participar">
-                <CheckboxGroup options={departmentOptions} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
+                <CheckboxGroup options={departmentOptions.filter((department) => !form.departments.includes(department))} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
               </Field>
             </div>
           </Card>

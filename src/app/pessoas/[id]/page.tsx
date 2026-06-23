@@ -83,9 +83,19 @@ function normalizeFamilyMembers(members: FamilyMember[]) {
 
 function formatDateBR(dateStr: string) {
   if (!dateStr) return "";
+  if (dateStr.includes("/")) return dateStr;
   const [year, month, day] = dateStr.split("-");
   if (!day) return "";
   return `${day}/${month}/${year}`;
+}
+
+function normalizeDate(dateStr: string) {
+  const value = dateStr.trim();
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const [day, month, year] = value.split("/");
+  if (!day || !month || !year) return null;
+  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 export default function PersonProfilePage({ params }: PageProps) {
@@ -170,17 +180,17 @@ export default function PersonProfilePage({ params }: PageProps) {
       preferred_name: form.preferred_name || null,
       phone: form.phone,
       email: form.email || null,
-      birth_date: form.birth_date || null,
+      birth_date: normalizeDate(form.birth_date),
       hide_birth_year: form.hide_birth_year,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
-      family_members: normalizeFamilyMembers(form.family_members),
+      family_members: normalizeFamilyMembers(form.family_members).map((member) => ({ ...member, birth_date: normalizeDate(member.birth_date) ?? "" })),
       is_baptized: form.is_baptized,
-      baptism_date: form.baptism_date || null,
+      baptism_date: normalizeDate(form.baptism_date),
       baptism_church: form.baptism_church || null,
       baptizing_pastor: form.baptizing_pastor || null,
       departments: form.departments,
-      desired_departments: form.desired_departments,
+      desired_departments: form.desired_departments.filter((department) => !form.departments.includes(department)),
       family_group: form.family_group || null,
       family_group_leader: getFamilyGroupLeader(form.family_group) || form.family_group_leader || null,
       notes: form.notes || null,
@@ -215,7 +225,7 @@ export default function PersonProfilePage({ params }: PageProps) {
 
   function confirmNewMember() {
     if (!newMember.name.trim()) return;
-    setForm({ ...form, family_members: [...form.family_members, newMember] });
+    setForm({ ...form, family_members: [...form.family_members, { ...newMember, birth_date: normalizeDate(newMember.birth_date) ?? "" }] });
     setNewMember(emptyMember);
     setShowFamilyForm(false);
   }
@@ -250,7 +260,7 @@ export default function PersonProfilePage({ params }: PageProps) {
             <div className="col-span-2 flex items-end gap-3">
               <label className="block flex-1">
                 <span className="mb-1 block text-sm font-medium text-ink">Data de nascimento</span>
-                <input className={inputClass} type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+                <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.birth_date)} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </label>
               <label className="flex h-[42px] shrink-0 items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
@@ -311,7 +321,7 @@ export default function PersonProfilePage({ params }: PageProps) {
                     </select>
                   </Field>
                   <Field label="Data nascimento">
-                    <input className={inputClass} type="date" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} />
+                    <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(newMember.birth_date ?? "")} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} />
                   </Field>
                 </div>
                 <div className="mt-3 flex gap-2">
@@ -352,17 +362,17 @@ export default function PersonProfilePage({ params }: PageProps) {
                 <option value="sim">Sim</option>
               </select>
             </Field>
-            <Field label="Data do batismo"><input className={inputClass} type="date" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
+            <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.baptism_date)} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
             <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
             <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
           </div>
 
           <div className="mt-5 grid gap-4">
             <Field label="Departamentos que participa">
-              <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values })} />
+              <CheckboxGroup options={departmentOptions} values={form.departments} onChange={(values) => setForm({ ...form, departments: values, desired_departments: form.desired_departments.filter((department) => !values.includes(department)) })} />
             </Field>
             <Field label="Departamentos que gostaria de participar">
-              <CheckboxGroup options={departmentOptions} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
+              <CheckboxGroup options={departmentOptions.filter((department) => !form.departments.includes(department))} values={form.desired_departments} onChange={(values) => setForm({ ...form, desired_departments: values })} />
             </Field>
             <Field label="Grupo Familiar">
               <select className={inputClass} value={form.family_group} onChange={(e) => setForm({ ...form, family_group: e.target.value, family_group_leader: getFamilyGroupLeader(e.target.value) })}>
