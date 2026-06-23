@@ -102,28 +102,25 @@ export default function LiderHomePage() {
             {leadershipSegments.length === 0 ? <p className="text-sm text-ink/60">Nenhum grupo ou departamento atribuido como lider.</p> : null}
           </div>
         </Card>
-        <Card>
-          <h3 className="mb-3 font-semibold">Departamentos que participo</h3>
-          <div className="space-y-2">
-            {departmentAssignments
-              .filter((a) => a.person_id === access?.profile?.person_id && a.role === "co_lider")
-              .map((a) => {
-                const count = allPeople.filter((item) => item.departments?.includes(a.department_name)).length;
+        {(access?.person?.departments?.length ?? 0) > 0 ? (
+          <Card>
+            <h3 className="mb-3 font-semibold">Departamentos que participo</h3>
+            <div className="space-y-2">
+              {(access?.person?.departments ?? []).map((deptName) => {
+                const count = allPeople.filter((item) => item.departments?.includes(deptName)).length;
                 return (
-                  <div key={a.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
+                  <div key={deptName} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
                     <div>
-                      <p className="text-sm font-semibold text-ink">{a.department_name}</p>
-                      <p className="text-xs text-ink/60">Co-lider</p>
+                      <p className="text-sm font-semibold text-ink">{deptName}</p>
+                      <p className="text-xs text-ink/60">Participante</p>
                     </div>
                     <Badge>{count}</Badge>
                   </div>
                 );
               })}
-            {departmentAssignments.filter((a) => a.person_id === access?.profile?.person_id && a.role === "co_lider").length === 0 ? (
-              <p className="text-sm text-ink/60">Nenhum departamento como co-lider.</p>
-            ) : null}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        ) : null}
         {familyGroupsLed.length > 0 ? (
           <Card>
             <h3 className="mb-3 font-semibold">Grupos Familiares que lidero</h3>
