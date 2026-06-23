@@ -260,7 +260,7 @@ export default function PersonProfilePage({ params }: PageProps) {
             <div className="col-span-2 flex items-end gap-3">
               <label className="block flex-1">
                 <span className="mb-1 block text-sm font-medium text-ink">Data de nascimento</span>
-                <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.birth_date)} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+                <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </label>
               <label className="flex h-[42px] shrink-0 items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />
@@ -321,7 +321,7 @@ export default function PersonProfilePage({ params }: PageProps) {
                     </select>
                   </Field>
                   <Field label="Data nascimento">
-                    <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(newMember.birth_date ?? "")} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} />
+                    <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} />
                   </Field>
                 </div>
                 <div className="mt-3 flex gap-2">
@@ -362,7 +362,7 @@ export default function PersonProfilePage({ params }: PageProps) {
                 <option value="sim">Sim</option>
               </select>
             </Field>
-            <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={formatDateBR(form.baptism_date)} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
+            <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
             <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
             <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
           </div>
