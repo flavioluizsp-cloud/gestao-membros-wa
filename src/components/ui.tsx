@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getAccessContext } from "@/lib/access";
 import type { AccessContext } from "@/lib/types";
+import { PrivacyGate } from "./privacy-gate";
 import { AuthButton } from "./auth-button";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
@@ -85,7 +86,9 @@ export function PageShell({ children }: { children: React.ReactNode }) {
             </nav>
           ) : null}
         </div>
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <PrivacyGate access={access}>{children}</PrivacyGate>
+        </div>
       </main>
     </div>
   );

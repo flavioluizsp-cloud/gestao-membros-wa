@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
+import { PrivacyConsentCheckbox } from "@/components/privacy-consent";
+import { privacyConsentVersion } from "@/lib/privacy";
 import { membrosDb } from "@/lib/supabase";
 import type { VisitorOrigin } from "@/lib/types";
 
@@ -20,6 +22,7 @@ export default function VisitanteCadastroPage() {
     birth_city: "",
     visitor_origin: "" as VisitorOrigin | "",
     notes: "",
+    privacy_consent: false,
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,6 +42,9 @@ export default function VisitanteCadastroPage() {
       notes: form.notes || null,
       status: "visitante" as const,
       pending_approval: true,
+      privacy_consent: form.privacy_consent,
+      privacy_consent_at: new Date().toISOString(),
+      privacy_consent_version: privacyConsentVersion,
     };
     const { error: err } = await membrosDb.from("people").insert(payload);
     setLoading(false);
@@ -92,6 +98,7 @@ export default function VisitanteCadastroPage() {
             </div>
           </Card>
           {error && <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+          <PrivacyConsentCheckbox checked={form.privacy_consent} onChange={(checked) => setForm({ ...form, privacy_consent: checked })} />
           <button type="submit" disabled={loading} className="w-full rounded-md bg-moss px-4 py-3 text-sm font-semibold text-white hover:bg-moss/90 disabled:opacity-50">
             {loading ? "Enviando..." : "Enviar"}
           </button>

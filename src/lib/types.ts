@@ -44,6 +44,9 @@ export type Person = {
   visitor_origin: VisitorOrigin | null;
   visitor_status: VisitorStatus | null;
   pending_approval: boolean | null;
+  privacy_consent: boolean | null;
+  privacy_consent_at: string | null;
+  privacy_consent_version: string | null;
   created_at: string;
 };
 
@@ -103,6 +106,12 @@ export type UserProfile = {
   person_id: string | null;
   role: UserRole;
   is_global_leader: boolean;
+  privacy_consent: boolean | null;
+  privacy_consent_at: string | null;
+  privacy_consent_version: string | null;
+  data_responsibility_consent: boolean | null;
+  data_responsibility_consent_at: string | null;
+  data_responsibility_version: string | null;
   created_at: string;
   people?: Pick<Person, "id" | "name" | "phone"> | null;
 };

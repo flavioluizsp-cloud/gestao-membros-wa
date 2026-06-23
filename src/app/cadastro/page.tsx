@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
+import { PrivacyConsentCheckbox } from "@/components/privacy-consent";
 import { departmentOptions, familyGroupOptions } from "@/lib/labels";
+import { privacyConsentVersion } from "@/lib/privacy";
 import { membrosDb, supabase } from "@/lib/supabase";
 import type { FamilyMember, MaritalStatus } from "@/lib/types";
 
@@ -66,6 +68,7 @@ export default function CadastroPage() {
     family_group: "",
     departments: [] as string[],
     desired_departments: [] as string[],
+    privacy_consent: false,
   });
 
   const [showFamilyForm, setShowFamilyForm] = useState(false);
@@ -133,6 +136,9 @@ export default function CadastroPage() {
       desired_departments: form.desired_departments,
       status: "visitante" as const,
       pending_approval: true,
+      privacy_consent: form.privacy_consent,
+      privacy_consent_at: new Date().toISOString(),
+      privacy_consent_version: privacyConsentVersion,
     };
 
     const { data: personData, error: err } = await membrosDb.from("people").insert(payload).select("id").single();
@@ -270,6 +276,7 @@ export default function CadastroPage() {
           </Card>
 
           {error && <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+          <PrivacyConsentCheckbox checked={form.privacy_consent} onChange={(checked) => setForm({ ...form, privacy_consent: checked })} />
 
           <button type="submit" disabled={loading} className="w-full rounded-md bg-moss px-4 py-3 text-sm font-semibold text-white hover:bg-moss/90 disabled:opacity-50">
             {loading ? "Enviando..." : "Enviar cadastro"}
