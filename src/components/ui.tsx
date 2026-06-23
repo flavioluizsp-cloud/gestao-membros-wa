@@ -16,7 +16,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     ["Mensagens", "/mensagens"],
     ["Eventos", "/eventos"],
     ["Relatorios", "/relatorios"],
-    ["Permissoes", "/permissoes"]
+    ["Permissoes", "/permissoes"],["Aprovacoes", "/admin/aprovacoes"]
   ];
 
   return (
