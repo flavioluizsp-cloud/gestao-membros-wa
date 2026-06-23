@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckSquare, HeartHandshake, Users } from "lucide-react";
+import { CalendarDays, HeartHandshake, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { membrosDb, supabase } from "@/lib/supabase";
-import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
-import { useRouter } from "next/navigation"
+import { isBirthdayThisWeek, formatDate } from "@/lib/date";
+import { useRouter } from "next/navigation";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
+import { familyGroupOptions } from "@/lib/labels";
 import type { ChurchEvent, DepartmentAssignment, PastoralTask, Person } from "@/lib/types";
 
-type Segment = {
-  key: string;
+type OverviewCard = {
+  href: string;
   title: string;
-  subtitle: string;
-  people: Person[];
+  description: string;
+  totalLabel: string;
+  total: number;
+  details: Array<[string, number]>;
 };
 
 export default function DashboardPage() {
@@ -70,46 +73,57 @@ export default function DashboardPage() {
   }
 
   const month = new Date().getMonth();
-  const visitorsThisMonth = people.filter((p) => p.status === "visitante" && new Date(p.created_at).getMonth() === month);
-  const birthdays = people.filter((p) => isBirthdayThisWeek(p.birth_date));
-  const stale = people.filter((p) => isOlderThanDays(p.last_contact_at, 30));
+  const visitorsThisMonth = people.filter((person) => person.status === "visitante" && new Date(person.created_at).getMonth() === month);
+  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const departments = buildDepartmentRows(people, departmentAssignments);
+  const familyGroups = buildFamilyGroupRows(people);
+  const assignments = buildAssignmentRows(people);
+  const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
+  const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
 
   const stats: Array<[string, number, LucideIcon]> = [
     ["Pessoas cadastradas", people.length, Users],
     ["Visitantes do mes", visitorsThisMonth.length, HeartHandshake],
-    ["Aniversariantes da semana", birthdays.length, CalendarDays],
-    ["Sem contato ha 30+ dias", stale.length, CheckSquare]
+    ["Aniversariantes da semana", birthdays.length, CalendarDays]
   ];
-  const departments = buildSegments(
-    people,
-    (person) => person.departments ?? [],
-    (name, members) => ({ key: `dep-${name}`, title: name, subtitle: findSegmentLeader(name, members, departmentAssignments), people: members })
-  );
-  const familyGroups = buildSegments(
-    people.filter((person) => person.family_group),
-    (person) => [person.family_group!],
-    (name, members) => ({
-      key: `gf-${name}`,
-      title: name,
-      subtitle: members.find((person) => person.family_group === name)?.family_group_leader ?? "Sem lider",
-      people: members
-    })
-  );
-  const leaders = buildSegments(
-    people.filter((person) => person.assigned_leader),
-    (person) => [person.assigned_leader!],
-    (name, members) => ({ key: `leader-${name}`, title: name, subtitle: "Atribuicao", people: members })
-  );
+
+  const overviewCards: OverviewCard[] = [
+    {
+      href: "/visao/departamentos",
+      title: "Departamentos",
+      description: "Acompanhe liderancas e pessoas por frente de trabalho.",
+      totalLabel: "Pessoas em departamentos",
+      total: new Set(departments.flatMap((item) => item.people.map((person) => person.id))).size,
+      details: departments.slice(0, 4).map((item) => [item.title, item.people.length])
+    },
+    {
+      href: "/visao/grupos-familiares",
+      title: "Grupos Familiares",
+      description: "Veja GFs, liderancas e quem ainda esta sem grupo.",
+      totalLabel: "Pessoas em GF",
+      total: peopleInFamilyGroups,
+      details: [["Sem GF", peopleWithoutFamilyGroup] as [string, number], ...familyGroups.slice(0, 3).map((item) => [item.title, item.people.length] as [string, number])]
+    },
+    {
+      href: "/visao/atribuicoes",
+      title: "Atribuicoes pastorais",
+      description: "Pessoas acompanhadas por lideres ou responsaveis diretos.",
+      totalLabel: "Pessoas atribuidas",
+      total: assignments.reduce((sum, item) => sum + item.people.length, 0),
+      details: assignments.slice(0, 4).map((item) => [item.title, item.people.length])
+    }
+  ];
 
   return (
     <PageShell>
       <PageHeader
         title="Dashboard"
-        description="Visao rapida da igreja, acompanhamento pastoral e proximos passos."
+        description="Visao geral para entrar rapido nas areas de cuidado e gestao."
         action={<LinkButton href="/pessoas">Cadastrar pessoa</LinkButton>}
       />
       <SignupLinksCard showApprovals />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+      <div className="grid gap-4 md:grid-cols-3">
         {stats.map(([label, value, Icon]) => (
           <Card key={label}>
             <div className="flex items-center justify-between">
@@ -120,14 +134,21 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+        {overviewCards.map((card) => (
+          <OverviewSectionCard key={card.href} card={card} />
+        ))}
+      </div>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="mb-3 font-semibold">Tarefas pastorais pendentes</h3>
           <div className="space-y-3">
-            {tasks.slice(0, 6).map((task) => (
+            {tasks.slice(0, 5).map((task) => (
               <div key={task.id} className="rounded-md border border-line p-3">
                 <p className="font-medium">{task.title}</p>
-                <p className="text-sm text-ink/60">{task.people?.name ?? "Sem pessoa vinculada"} · prazo {formatDate(task.due_date)}</p>
+                <p className="text-sm text-ink/60">{task.people?.name ?? "Sem pessoa vinculada"} - prazo {formatDate(task.due_date)}</p>
               </div>
             ))}
             {tasks.length === 0 ? <p className="text-sm text-ink/60">Nenhuma tarefa pendente.</p> : null}
@@ -139,20 +160,78 @@ export default function DashboardPage() {
             {events.map((event) => (
               <div key={event.id} className="rounded-md border border-line p-3">
                 <p className="font-medium">{event.name}</p>
-                <p className="text-sm text-ink/60">{formatDate(event.event_date)} · {event.location ?? "Local a definir"}</p>
+                <p className="text-sm text-ink/60">{formatDate(event.event_date)} - {event.location ?? "Local a definir"}</p>
               </div>
             ))}
             {events.length === 0 ? <p className="text-sm text-ink/60">Nenhum evento futuro cadastrado.</p> : null}
           </div>
         </Card>
       </div>
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
-        <SegmentPanel title="Departamentos" empty="Nenhum departamento com pessoas." type="departamento" segments={departments} />
-        <SegmentPanel title="Grupos Familiares" empty="Nenhum Grupo Familiar com pessoas." type="grupo-familiar" segments={familyGroups} />
-        <SegmentPanel title="Atribuicoes" empty="Nenhuma atribuicao cadastrada." type="atribuicao" segments={leaders} />
-      </div>
     </PageShell>
   );
+}
+
+function OverviewSectionCard({ card }: { card: OverviewCard }) {
+  return (
+    <Link href={card.href} className="block rounded-lg border border-line bg-white p-4 shadow-soft hover:bg-sage/50">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-ink">{card.title}</h3>
+          <p className="mt-1 text-sm text-ink/60">{card.description}</p>
+        </div>
+        <Badge>{card.total}</Badge>
+      </div>
+      <p className="mt-4 text-xs font-semibold uppercase text-ink/50">{card.totalLabel}</p>
+      <div className="mt-3 space-y-2">
+        {card.details.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between rounded-md border border-line px-3 py-2">
+            <p className="text-sm font-medium text-ink">{label}</p>
+            <span className="text-sm font-bold text-moss">{value}</span>
+          </div>
+        ))}
+        {card.details.length === 0 ? <p className="text-sm text-ink/60">Nenhum registro ainda.</p> : null}
+      </div>
+      <span className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white">
+        Abrir visao geral
+      </span>
+    </Link>
+  );
+}
+
+function buildDepartmentRows(people: Person[], departmentAssignments: DepartmentAssignment[]) {
+  const map = new Map<string, Person[]>();
+  for (const person of people) {
+    for (const department of person.departments ?? []) {
+      map.set(department, [...(map.get(department) ?? []), person]);
+    }
+  }
+  return Array.from(map.entries()).map(([title, members]) => ({
+    title,
+    subtitle: findSegmentLeader(title, members, departmentAssignments),
+    people: members
+  })).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function buildFamilyGroupRows(people: Person[]) {
+  const map = new Map<string, Person[]>();
+  for (const person of people.filter((item) => item.family_group)) {
+    map.set(person.family_group!, [...(map.get(person.family_group!) ?? []), person]);
+  }
+  return Array.from(map.entries()).map(([title, members]) => ({
+    title,
+    subtitle: familyGroupOptions.find((group) => group.value === title)
+      ? [familyGroupOptions.find((group) => group.value === title)?.leader, familyGroupOptions.find((group) => group.value === title)?.coLeader].filter(Boolean).join(" / ")
+      : members.find((person) => person.family_group === title)?.family_group_leader ?? "Sem lider",
+    people: members
+  })).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function buildAssignmentRows(people: Person[]) {
+  const map = new Map<string, Person[]>();
+  for (const person of people.filter((item) => item.assigned_leader)) {
+    map.set(person.assigned_leader!, [...(map.get(person.assigned_leader!) ?? []), person]);
+  }
+  return Array.from(map.entries()).map(([title, members]) => ({ title, subtitle: "Atribuicao", people: members })).sort((a, b) => a.title.localeCompare(b.title));
 }
 
 function findSegmentLeader(departmentName: string, members: Person[], departmentAssignments: DepartmentAssignment[]) {
@@ -167,48 +246,4 @@ function findSegmentLeader(departmentName: string, members: Person[], department
   if (leader) return leader.name;
   if (coLeader) return coLeader.name;
   return "Sem lider definido";
-}
-
-function buildSegments(
-  people: Person[],
-  getNames: (person: Person) => string[],
-  makeSegment: (name: string, members: Person[]) => Segment
-) {
-  const map = new Map<string, Person[]>();
-  for (const person of people) {
-    for (const name of getNames(person).filter(Boolean)) {
-      map.set(name, [...(map.get(name) ?? []), person]);
-    }
-  }
-  return Array.from(map.entries())
-    .map(([name, members]) => makeSegment(name, members))
-    .sort((a, b) => a.title.localeCompare(b.title));
-}
-
-function SegmentPanel({ title, empty, type, segments }: { title: string; empty: string; type: string; segments: Segment[] }) {
-  return (
-    <Card>
-      <h3 className="mb-3 font-semibold">{title}</h3>
-      <div className="space-y-3">
-        {segments.map((segment) => (
-          <div key={segment.key} className="rounded-md border border-line p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold">{segment.title}</p>
-                <p className="mt-1 text-sm text-ink/60">Lider: {segment.subtitle}</p>
-              </div>
-              <Badge>{segment.people.length}</Badge>
-            </div>
-            <Link
-              href={`/segmentos/${type}/${encodeURIComponent(segment.title)}`}
-              className="mt-3 inline-flex w-full items-center justify-center rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white hover:bg-moss/90"
-            >
-              Ver gestao dos contatos
-            </Link>
-          </div>
-        ))}
-        {segments.length === 0 ? <p className="text-sm text-ink/60">{empty}</p> : null}
-      </div>
-    </Card>
-  );
 }
