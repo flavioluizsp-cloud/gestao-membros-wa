@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import type { DepartmentAssignment, Person } from "@/lib/types";
+import type { DepartmentAssignment, FamilyGroupAssignment, Person } from "@/lib/types";
 
 type OverviewCard = {
   href: string;
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [people, setPeople] = useState<Person[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
+  const [familyGroupAssignments, setFamilyGroupAssignments] = useState<FamilyGroupAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,12 +45,14 @@ export default function DashboardPage() {
         router.replace("/lider");
         return;
       }
-      const [peopleResult, departmentsResult] = await Promise.all([
+      const [peopleResult, departmentsResult, familyGroupsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("created_at", { ascending: false }),
-        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)")
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)"),
+        membrosDb.from("family_group_assignments").select("*, people(id, name, preferred_name, phone)")
       ]);
       setPeople(filterPeopleByAccess((peopleResult.data ?? []) as Person[], accessContext));
       setDepartmentAssignments((departmentsResult.data ?? []) as DepartmentAssignment[]);
+      setFamilyGroupAssignments((familyGroupsResult.data ?? []) as FamilyGroupAssignment[]);
       setLoading(false);
     }
 
@@ -71,7 +74,7 @@ export default function DashboardPage() {
   const visitorsThisMonth = people.filter((person) => person.status === "visitante" && new Date(person.created_at).getMonth() === month);
   const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
   const departments = buildDepartmentRows(people, departmentAssignments);
-  const familyGroups = buildFamilyGroupRows(people);
+  const familyGroups = buildFamilyGroupRows(people, familyGroupAssignments);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
 
@@ -201,18 +204,28 @@ function buildDepartmentRows(people: Person[], departmentAssignments: Department
   })).sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function buildFamilyGroupRows(people: Person[]) {
+function buildFamilyGroupRows(people: Person[], familyGroupAssignments: FamilyGroupAssignment[]) {
   const map = new Map<string, Person[]>();
   for (const person of people.filter((item) => item.family_group)) {
     map.set(person.family_group!, [...(map.get(person.family_group!) ?? []), person]);
   }
   return Array.from(map.entries()).map(([title, members]) => ({
     title,
-    subtitle: familyGroupOptions.find((group) => group.value === title)
-      ? [familyGroupOptions.find((group) => group.value === title)?.leader, familyGroupOptions.find((group) => group.value === title)?.coLeader].filter(Boolean).join(" / ")
-      : members.find((person) => person.family_group === title)?.family_group_leader ?? "Sem lider",
+    subtitle: findFamilyGroupLeaders(title, members, familyGroupAssignments),
     people: members
   })).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function findFamilyGroupLeaders(groupName: string, members: Person[], familyGroupAssignments: FamilyGroupAssignment[]) {
+  const configuredLeaders = familyGroupAssignments
+    .filter((assignment) => assignment.family_group === groupName && assignment.role === "lider")
+    .map((assignment) => assignment.people?.preferred_name || assignment.people?.name)
+    .filter(Boolean);
+  if (configuredLeaders.length > 0) return configuredLeaders.join(" / ");
+  const group = familyGroupOptions.find((option) => option.value === groupName);
+  if (group?.leader && group.coLeader) return `${group.leader} / ${group.coLeader}`;
+  if (group?.leader) return group.leader;
+  return members.find((person) => person.family_group === groupName)?.family_group_leader ?? "Sem lider";
 }
 
 function findSegmentLeader(departmentName: string, members: Person[], departmentAssignments: DepartmentAssignment[]) {

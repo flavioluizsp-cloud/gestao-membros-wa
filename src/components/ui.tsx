@@ -17,6 +17,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     ["Dashboard", "/"],
     ["Pessoas", "/pessoas"],
     ["Departamentos", "/departamentos"],
+    ["Grupos Familiares", "/grupos-familiares"],
     ["Visitantes", "/visitantes"],
     ["Tarefas", "/tarefas"],
     ["Mensagens", "/mensagens"],

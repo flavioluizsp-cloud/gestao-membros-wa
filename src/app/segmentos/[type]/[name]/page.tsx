@@ -9,7 +9,7 @@ import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
-import type { DepartmentAssignment, Person } from "@/lib/types";
+import type { DepartmentAssignment, FamilyGroupAssignment, Person } from "@/lib/types";
 
 type PageProps = {
   params: Promise<{ type: string; name: string }>;
@@ -21,6 +21,7 @@ export default function SegmentPage({ params }: PageProps) {
   const [people, setPeople] = useState<Person[]>([]);
   const [allPeople, setAllPeople] = useState<Person[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
+  const [familyGroupAssignments, setFamilyGroupAssignments] = useState<FamilyGroupAssignment[]>([]);
   const [message, setMessage] = useState("");
   const [isLeader, setIsLeader] = useState(false);
   const [leaderPeople, setLeaderPeople] = useState<Array<{ name: string; phone?: string; role: string }>>([]);
@@ -37,23 +38,26 @@ export default function SegmentPage({ params }: PageProps) {
     async function loadPeople() {
       if (!supabase || !membrosDb || !name) return;
       const accessContext = await getAccessContext();
-      const [{ data }, { data: departmentData }] = await Promise.all([
+      const [{ data }, { data: departmentData }, { data: familyGroupData }] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
-        type === "departamento" ? membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("department_name", name) : Promise.resolve({ data: [] })
+        type === "departamento" ? membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("department_name", name) : Promise.resolve({ data: [] }),
+        type === "grupo-familiar" ? membrosDb.from("family_group_assignments").select("*, people(id, name, preferred_name, phone)").eq("family_group", name) : Promise.resolve({ data: [] })
       ]);
       const role = accessContext?.profile?.role;
       setIsLeader(role === "admin" || role === "pastor" || role === "lider");
       const allPeopleData = (data ?? []) as Person[];
       const assignments = (departmentData ?? []) as DepartmentAssignment[];
+      const groupAssignments = (familyGroupData ?? []) as FamilyGroupAssignment[];
       setAllPeople(allPeopleData);
       setDepartmentAssignments(assignments);
+      setFamilyGroupAssignments(groupAssignments);
       if (type === "departamento") {
         const leaders = assignments
           .map((a) => ({ name: a.people?.preferred_name || a.people?.name || "", phone: a.people?.phone, role: a.role === "lider" ? "Lider" : "Co-lider" }))
           .filter((l) => l.name);
         setLeaderPeople(leaders);
       } else if (type === "grupo-familiar") {
-        setLeaderPeople(getFamilyGroupLeadership(name, allPeopleData));
+        setLeaderPeople(getFamilyGroupLeadership(name, allPeopleData, groupAssignments));
       } else {
         setLeaderPeople([]);
       }
@@ -63,7 +67,7 @@ export default function SegmentPage({ params }: PageProps) {
     loadPeople();
   }, [type, name]);
 
-  const leader = useMemo(() => findLeader(type, name, people, departmentAssignments, allPeople), [type, name, people, departmentAssignments, allPeople]);
+  const leader = useMemo(() => findLeader(type, name, people, departmentAssignments, familyGroupAssignments, allPeople), [type, name, people, departmentAssignments, familyGroupAssignments, allPeople]);
   const defaultMessage = buildSegmentMessage(type, name);
   const messageToSend = message.trim() || defaultMessage;
 
@@ -188,8 +192,13 @@ function belongsToSegment(person: Person, type: string, name: string) {
   return false;
 }
 
-function findLeader(type: string, name: string, people: Person[], departmentAssignments: DepartmentAssignment[], allPeople: Person[]) {
+function findLeader(type: string, name: string, people: Person[], departmentAssignments: DepartmentAssignment[], familyGroupAssignments: FamilyGroupAssignment[], allPeople: Person[]) {
   if (type === "grupo-familiar") {
+    const configuredLeaders = familyGroupAssignments
+      .filter((assignment) => assignment.role === "lider")
+      .map((assignment) => assignment.people?.preferred_name || assignment.people?.name || allPeople.find((person) => person.id === assignment.person_id)?.name)
+      .filter(Boolean);
+    if (configuredLeaders.length > 0) return configuredLeaders.join(" / ");
     const group = familyGroupOptions.find((option) => option.value === name);
     if (group?.leader && group.coLeader) return `${group.leader} / ${group.coLeader}`;
     if (group?.leader) return group.leader;
@@ -231,7 +240,17 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || name;
 }
 
-function getFamilyGroupLeadership(groupName: string, allPeople: Person[]) {
+function getFamilyGroupLeadership(groupName: string, allPeople: Person[], groupAssignments: FamilyGroupAssignment[]) {
+  if (groupAssignments.length > 0) {
+    return groupAssignments
+      .map((assignment) => ({
+        name: assignment.people?.preferred_name || assignment.people?.name || allPeople.find((person) => person.id === assignment.person_id)?.name || "",
+        phone: assignment.people?.phone || allPeople.find((person) => person.id === assignment.person_id)?.phone,
+        role: assignment.role === "lider" ? "Lider" : "Co-lider"
+      }))
+      .filter((leader) => leader.name);
+  }
+
   const group = familyGroupOptions.find((option) => option.value === groupName);
   if (!group) {
     const leaderName = allPeople.find((person) => person.family_group === groupName)?.family_group_leader;

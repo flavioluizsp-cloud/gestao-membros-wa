@@ -6,7 +6,7 @@ import { Badge, Card, PageHeader, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
-import type { DepartmentAssignment, Person } from "@/lib/types";
+import type { DepartmentAssignment, FamilyGroupAssignment, Person } from "@/lib/types";
 
 type PageProps = {
   params: Promise<{ type: string }>;
@@ -23,6 +23,7 @@ export default function OverviewPage({ params }: PageProps) {
   const [type, setType] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
+  const [familyGroupAssignments, setFamilyGroupAssignments] = useState<FamilyGroupAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,18 +34,20 @@ export default function OverviewPage({ params }: PageProps) {
     async function load() {
       if (!supabase || !membrosDb || !type) return;
       await getAccessContext();
-      const [peopleResult, assignmentsResult] = await Promise.all([
+      const [peopleResult, assignmentsResult, familyGroupAssignmentsResult] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
-        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)")
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)"),
+        membrosDb.from("family_group_assignments").select("*, people(id, name, preferred_name, phone)")
       ]);
       setPeople((peopleResult.data ?? []) as Person[]);
       setDepartmentAssignments((assignmentsResult.data ?? []) as DepartmentAssignment[]);
+      setFamilyGroupAssignments((familyGroupAssignmentsResult.data ?? []) as FamilyGroupAssignment[]);
       setLoading(false);
     }
     load();
   }, [type]);
 
-  const rows = useMemo(() => buildRows(type, people, departmentAssignments), [type, people, departmentAssignments]);
+  const rows = useMemo(() => buildRows(type, people, departmentAssignments, familyGroupAssignments), [type, people, departmentAssignments, familyGroupAssignments]);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
   const title = getTitle(type);
@@ -100,9 +103,9 @@ export default function OverviewPage({ params }: PageProps) {
   );
 }
 
-function buildRows(type: string, people: Person[], departmentAssignments: DepartmentAssignment[]) {
+function buildRows(type: string, people: Person[], departmentAssignments: DepartmentAssignment[], familyGroupAssignments: FamilyGroupAssignment[]) {
   if (type === "departamentos") return buildDepartmentRows(people, departmentAssignments);
-  if (type === "grupos-familiares") return buildFamilyGroupRows(people);
+  if (type === "grupos-familiares") return buildFamilyGroupRows(people, familyGroupAssignments);
   if (type === "atribuicoes") return buildAssignmentRows(people);
   return [];
 }
@@ -122,14 +125,14 @@ function buildDepartmentRows(people: Person[], departmentAssignments: Department
   })).sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function buildFamilyGroupRows(people: Person[]): OverviewRow[] {
+function buildFamilyGroupRows(people: Person[], familyGroupAssignments: FamilyGroupAssignment[]): OverviewRow[] {
   const map = new Map<string, Person[]>();
   for (const person of people.filter((item) => item.family_group)) {
     map.set(person.family_group!, [...(map.get(person.family_group!) ?? []), person]);
   }
   return Array.from(map.entries()).map(([title, members]) => ({
     title,
-    subtitle: `Lider: ${findFamilyGroupLeaders(title, members)}`,
+    subtitle: `Lider: ${findFamilyGroupLeaders(title, members, familyGroupAssignments)}`,
     people: members,
     href: `/segmentos/grupo-familiar/${encodeURIComponent(title)}`
   })).sort((a, b) => a.title.localeCompare(b.title));
@@ -158,7 +161,12 @@ function findDepartmentLeaders(departmentName: string, members: Person[], depart
   return leader?.preferred_name || leader?.name || "Sem lider definido";
 }
 
-function findFamilyGroupLeaders(groupName: string, members: Person[]) {
+function findFamilyGroupLeaders(groupName: string, members: Person[], familyGroupAssignments: FamilyGroupAssignment[]) {
+  const configuredLeaders = familyGroupAssignments
+    .filter((assignment) => assignment.family_group === groupName && assignment.role === "lider")
+    .map((assignment) => assignment.people?.preferred_name || assignment.people?.name)
+    .filter(Boolean);
+  if (configuredLeaders.length > 0) return configuredLeaders.join(" / ");
   const group = familyGroupOptions.find((option) => option.value === groupName);
   if (group?.leader && group.coLeader) return `${group.leader} / ${group.coLeader}`;
   if (group?.leader) return group.leader;

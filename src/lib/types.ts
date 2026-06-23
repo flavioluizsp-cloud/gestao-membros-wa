@@ -144,6 +144,15 @@ export type DepartmentAssignment = {
   people?: Pick<Person, "id" | "name" | "preferred_name" | "phone"> | null;
 };
 
+export type FamilyGroupAssignment = {
+  id: string;
+  family_group: string;
+  person_id: string;
+  role: DepartmentAssignmentRole;
+  created_at: string;
+  people?: Pick<Person, "id" | "name" | "preferred_name" | "phone"> | null;
+};
+
 export type AccessContext = {
   profile: UserProfile | null;
   scopes: UserScope[];
