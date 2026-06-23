@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Badge, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { departmentOptions } from "@/lib/labels";
@@ -112,6 +113,7 @@ export default function DepartmentsPage() {
       <PageHeader
         title="Departamentos"
         description="Defina lideres e co-lideres por departamento. Depois, somente quem estiver como lider tera acesso a gestao do departamento."
+        action={<Link href="/" className="inline-flex w-full items-center justify-center rounded-md bg-moss px-4 py-2.5 text-sm font-bold text-white shadow-soft hover:bg-moss/90 sm:w-auto">Voltar ao Dashboard</Link>}
       />
 
       {message ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Badge, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
@@ -101,6 +102,7 @@ export default function FamilyGroupsAdminPage() {
       <PageHeader
         title="Grupos Familiares"
         description="Defina lideres e co-lideres de cada GF. Lideres poderao receber acesso diferenciado depois; co-lideres ficam registrados como apoio."
+        action={<Link href="/" className="inline-flex w-full items-center justify-center rounded-md bg-moss px-4 py-2.5 text-sm font-bold text-white shadow-soft hover:bg-moss/90 sm:w-auto">Voltar ao Dashboard</Link>}
       />
 
       {message ? (

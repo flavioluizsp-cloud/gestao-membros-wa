@@ -111,6 +111,24 @@ export default function DashboardPage() {
       />
       <SignupLinksCard showApprovals />
 
+      <Card className="mb-6">
+        <h3 className="mb-3 font-semibold text-ink">Acessos rapidos</h3>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/pessoas" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
+            Pessoas
+          </Link>
+          <Link href="/departamentos" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
+            Gerenciar departamentos
+          </Link>
+          <Link href="/grupos-familiares" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
+            Gerenciar GFs
+          </Link>
+          <Link href="/admin/aprovacoes" className="rounded-md border border-line px-3 py-2.5 text-center text-sm font-semibold text-ink hover:bg-sage">
+            Aprovacoes
+          </Link>
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-3">
         {stats.map(([label, value, Icon]) => (
           <Card key={label}>
