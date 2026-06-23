@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Card, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
@@ -46,6 +47,9 @@ export default function MembroHomePage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-ink">Olá, {person.preferred_name || person.name} 👋</h2>
         <p className="mt-1 text-sm text-ink/65">Bem-vindo ao Portal do Membro.</p>
+        <Link href={`/pessoas/${person.id}`} className="mt-4 inline-flex w-full justify-center rounded-md bg-moss px-3 py-2.5 text-sm font-semibold text-white hover:bg-moss/90 sm:w-auto">
+          Editar meus dados
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

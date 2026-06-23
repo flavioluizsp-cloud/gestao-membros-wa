@@ -110,6 +110,10 @@ export default function PersonProfilePage({ params }: PageProps) {
       if (!supabase || !membrosDb || !id) return;
       const accessContext = await getAccessContext();
       setAccess(accessContext);
+      if (id === "novo" && accessContext.isMember) {
+        window.location.href = "/membro";
+        return;
+      }
       const { data: peopleData } = await membrosDb.from("people").select("*").order("name");
       const allPeople = (peopleData ?? []) as Person[];
       setPeople(allPeople);

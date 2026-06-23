@@ -9,16 +9,18 @@ import { formatDate } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import type { Person } from "@/lib/types";
+import type { AccessContext, Person } from "@/lib/types";
 
 export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([]);
+  const [access, setAccess] = useState<AccessContext | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     async function loadPeople() {
       if (!supabase || !membrosDb) return;
       const access = await getAccessContext();
+      setAccess(access);
       const { data } = await membrosDb.from("people").select("*").order("name");
       setPeople(filterPeopleByAccess((data ?? []) as Person[], access));
     }
@@ -57,7 +59,7 @@ export default function PeoplePage() {
       <PageHeader
         title="Pessoas"
         description="Pesquise uma pessoa e abra o perfil para ver ou atualizar os dados."
-        action={<Link href="/pessoas/novo" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Nova pessoa</Link>}
+        action={access?.isAdminLike || access?.isLeader ? <Link href="/pessoas/novo" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Nova pessoa</Link> : null}
       />
       <Card className="mb-5">
         <Field label="Pesquisar pessoa">

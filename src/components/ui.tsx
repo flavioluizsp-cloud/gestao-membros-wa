@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAccessContext } from "@/lib/access";
+import type { AccessContext } from "@/lib/types";
 import { AuthButton } from "./auth-button";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const nav = [
+  const [access, setAccess] = useState<AccessContext | null>(null);
+  const adminNav = [
     ["Dashboard", "/"],
     ["Pessoas", "/pessoas"],
     ["Visitantes", "/visitantes"],
@@ -16,8 +19,20 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     ["Mensagens", "/mensagens"],
     ["Eventos", "/eventos"],
     ["Relatorios", "/relatorios"],
-    ["Permissoes", "/permissoes"],["Aprovacoes", "/admin/aprovacoes"]
+    ["Permissoes", "/permissoes"],
+    ["Aprovacoes", "/admin/aprovacoes"]
   ];
+  const leaderNav = [
+    ["Meu painel", "/lider"]
+  ];
+  const memberNav = [
+    ["Meu perfil", "/membro"]
+  ];
+  const nav = access?.isAdminLike ? adminNav : access?.isLeader ? leaderNav : access?.isMember ? memberNav : [["Entrar", "/login"]];
+
+  useEffect(() => {
+    getAccessContext().then(setAccess);
+  }, []);
 
   return (
     <div className="min-h-screen">
