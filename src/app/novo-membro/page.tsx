@@ -59,6 +59,13 @@ function normalizeDate(dateStr: string) {
   return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
+
+function maskDate(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.slice(0, 2) + "/" + digits.slice(2);
+  return digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
+}
 export default function CadastroPage() {
   const [form, setForm] = useState({
     name: "",
@@ -199,7 +206,7 @@ export default function CadastroPage() {
               <Field label="E-mail"><input required className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
               <Field label="Senha de acesso"><input required className={inputClass} type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
               <Field label="Confirmar senha"><input required className={inputClass} type="password" minLength={6} value={form.confirm_password} onChange={(e) => setForm({ ...form, confirm_password: e.target.value })} /></Field>
-              <Field label="Data de nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></Field>
+              <Field label="Data de nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} /></Field>
               <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
               <div className="sm:col-span-2">
                 <Field label="Situacao conjugal">
@@ -237,7 +244,7 @@ export default function CadastroPage() {
                         {relationshipOptions.map((o) => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </Field>
-                    <Field label="Data nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: e.target.value })} /></Field>
+                    <Field label="Data nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: maskDate(e.target.value) })} /></Field>
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button type="button" onClick={confirmNewMember} className="rounded-md bg-moss px-4 py-2 text-sm font-semibold text-white">Confirmar</button>
@@ -263,7 +270,7 @@ export default function CadastroPage() {
               </Field>
               {form.is_baptized && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: e.target.value })} /></Field>
+                  <Field label="Data do batismo"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.baptism_date} onChange={(e) => setForm({ ...form, baptism_date: maskDate(e.target.value) })} /></Field>
                   <Field label="Igreja do batismo"><input className={inputClass} value={form.baptism_church} onChange={(e) => setForm({ ...form, baptism_church: e.target.value })} /></Field>
                   <Field label="Pastor que batizou"><input className={inputClass} value={form.baptizing_pastor} onChange={(e) => setForm({ ...form, baptizing_pastor: e.target.value })} /></Field>
                 </div>
