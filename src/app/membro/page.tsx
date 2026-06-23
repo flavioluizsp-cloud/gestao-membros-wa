@@ -47,6 +47,8 @@ export default function MembroHomePage() {
 
   const familyGroupLeader = person.family_group_leader;
   const birthdays = allPeople.filter((item) => isBirthdayThisWeek(item.birth_date));
+  const leadPastor = getLeadPastor(allPeople);
+  const assignedLeader = person.assigned_leader ? findPersonByName(allPeople, person.assigned_leader) : null;
 
   if (person.pending_approval) {
     return (
@@ -188,21 +190,63 @@ export default function MembroHomePage() {
           </div>
         </Card>
 
-        {person.assigned_leader ? (
-          <Card>
-            <h3 className="mb-3 font-semibold text-ink">Meu acompanhamento</h3>
-            <p className="text-sm text-ink/60">Responsavel por voce</p>
+        <Card>
+          <h3 className="mb-3 font-semibold text-ink">Cuidado pastoral</h3>
+          {person.assigned_leader ? (
+            <>
+              <p className="text-sm text-ink/60">Quem caminha com voce</p>
+              <div className="mt-2 flex items-center justify-between rounded-md border border-line px-3 py-2.5">
+                <p className="text-sm font-semibold text-ink">{assignedLeader?.preferred_name || assignedLeader?.name || person.assigned_leader}</p>
+                {assignedLeader?.phone ? (
+                  <a href={buildWhatsAppUrl(assignedLeader.phone, `Ola ${assignedLeader.preferred_name || assignedLeader.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+          <div className={person.assigned_leader ? "mt-4" : ""}>
+            <p className="text-sm text-ink/60">Pedido de oracao</p>
             <div className="mt-2 flex items-center justify-between rounded-md border border-line px-3 py-2.5">
-              <p className="text-sm font-semibold text-ink">{person.assigned_leader}</p>
-              <a href={buildWhatsAppUrl(person.phone, `Ola ${person.preferred_name || person.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
-                <MessageCircle className="h-4 w-4" />
-              </a>
+              <div>
+                <p className="text-sm font-semibold text-ink">{leadPastor?.preferred_name || leadPastor?.name || "Pastor titular"}</p>
+                <p className="text-xs text-ink/60">Pastor titular da igreja</p>
+              </div>
+              {leadPastor?.phone ? (
+                <a
+                  href={buildWhatsAppUrl(leadPastor.phone, `Ola pastor, paz! Gostaria de compartilhar um pedido de oracao.`)}
+                  target="_blank"
+                  className="rounded-md border border-line p-2 text-moss hover:bg-sage"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              ) : null}
             </div>
-          </Card>
-        ) : null}
+          </div>
+        </Card>
       </div>
     </PageShell>
   );
+}
+
+function getLeadPastor(people: Person[]) {
+  return people.find((person) =>
+    normalizeText(person.name).includes("flavio") ||
+    normalizeText(person.preferred_name || "").includes("flavio")
+  );
+}
+
+function findPersonByName(people: Person[], name: string) {
+  const normalizedName = normalizeText(name);
+  return people.find((person) => {
+    const preferred = normalizeText(person.preferred_name || "");
+    const fullName = normalizeText(person.name);
+    return preferred === normalizedName || fullName === normalizedName || fullName.includes(normalizedName);
+  });
+}
+
+function normalizeText(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function formatBirthdayForMember(date?: string | null) {
