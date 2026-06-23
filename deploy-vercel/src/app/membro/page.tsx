@@ -118,7 +118,7 @@ export default function MembroHomePage() {
             )}
             {(person.departments ?? []).length > 0 && (
               <div>
-                <p className="mb-1 text-ink/60">Departamentos</p>
+                <p className="mb-2 text-ink/60">Departamentos</p>
                 <div className="space-y-2">
                   {(person.departments ?? []).map((dep) => { const count = allPeople.filter((p) => p.departments?.includes(dep)).length; return (
                     <Link
