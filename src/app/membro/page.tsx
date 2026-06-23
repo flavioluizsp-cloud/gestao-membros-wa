@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
-import { Card, PageShell } from "@/components/ui";
+import { Badge, Card, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { formatDate } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
@@ -14,6 +14,7 @@ import type { AccessContext, Person } from "@/lib/types";
 export default function MembroHomePage() {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
+  const [allPeople, setAllPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +22,12 @@ export default function MembroHomePage() {
       const ctx = await getAccessContext();
       setAccess(ctx);
       if (ctx.person?.id && membrosDb) {
-        const { data } = await membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle();
+        const [{ data }, { data: allPeopleData }] = await Promise.all([
+          membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
+          membrosDb.from("people").select("id, departments"),
+        ]);
         setPerson(data as Person | null);
+        setAllPeople((allPeopleData ?? []) as Person[]);
       }
       setLoading(false);
     }
@@ -34,8 +39,8 @@ export default function MembroHomePage() {
   if (!person) return (
     <PageShell>
       <div className="rounded-lg border border-dashed border-line bg-white p-8 text-center">
-        <h3 className="font-semibold text-ink">Perfil não encontrado</h3>
-        <p className="mt-1 text-sm text-ink/60">Seu usuário ainda não está vinculado a um cadastro. Fale com a liderança.</p>
+        <h3 className="font-semibold text-ink">Perfil nÃ£o encontrado</h3>
+        <p className="mt-1 text-sm text-ink/60">Seu usuÃ¡rio ainda nÃ£o estÃ¡ vinculado a um cadastro. Fale com a lideranÃ§a.</p>
       </div>
     </PageShell>
   );
@@ -56,7 +61,7 @@ export default function MembroHomePage() {
   return (
     <PageShell>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-ink">Olá, {person.preferred_name || person.name} 👋</h2>
+        <h2 className="text-2xl font-bold text-ink">OlÃ¡, {person.preferred_name || person.name} ðŸ‘‹</h2>
         <p className="mt-1 text-sm text-ink/65">Bem-vindo ao Portal do Membro.</p>
         <Link href={`/pessoas/${person.id}`} className="mt-4 inline-flex w-full justify-center rounded-md bg-moss px-3 py-2.5 text-sm font-semibold text-white hover:bg-moss/90 sm:w-auto">
           Editar meus dados
@@ -105,7 +110,7 @@ export default function MembroHomePage() {
             )}
             {familyGroupLeader && (
               <div className="flex justify-between">
-                <span className="text-ink/60">Líder do GF</span>
+                <span className="text-ink/60">LÃ­der do GF</span>
                 <span className="font-medium text-ink">{familyGroupLeader}</span>
               </div>
             )}
@@ -117,11 +122,21 @@ export default function MembroHomePage() {
             )}
             {(person.departments ?? []).length > 0 && (
               <div>
-                <p className="mb-1 text-ink/60">Departamentos</p>
-                <div className="flex flex-wrap gap-1">
-                  {(person.departments ?? []).map((dep) => (
-                    <span key={dep} className="rounded-md bg-sage px-2 py-0.5 text-xs font-semibold text-moss">{dep}</span>
-                  ))}
+                <p className="mb-2 text-ink/60">Departamentos</p>
+                <div className="space-y-2">
+                  {(person.departments ?? []).map((dep) => { const count = allPeople.filter((p) => p.departments?.includes(dep)).length; return (
+                    <Link
+                        key={dep}
+                        href={`/segmentos/departamento/${encodeURIComponent(dep)}`}
+                        className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-ink">{dep}</p>
+                          <p className="text-xs text-ink/60">Participante</p>
+                        </div>
+                        <Badge>{count}</Badge>
+                      </Link>
+                  ); })}
                 </div>
               </div>
             )}
@@ -130,12 +145,12 @@ export default function MembroHomePage() {
 
         {(person.family_members ?? []).length > 0 && (
           <Card className="md:col-span-2">
-            <h3 className="mb-3 font-semibold text-ink">Minha família</h3>
+            <h3 className="mb-3 font-semibold text-ink">Minha famÃ­lia</h3>
             <div className="grid gap-2 sm:grid-cols-2">
               {(person.family_members ?? []).map((member, index) => (
                 <div key={index} className="rounded-md border border-line px-3 py-2.5">
                   <p className="text-sm font-semibold text-ink">{member.name}</p>
-                  <p className="text-xs text-ink/60">{member.relationship}{member.birth_date ? ` · ${formatDate(member.birth_date)}` : ""}</p>
+                  <p className="text-xs text-ink/60">{member.relationship}{member.birth_date ? ` Â· ${formatDate(member.birth_date)}` : ""}</p>
                 </div>
               ))}
             </div>
@@ -145,7 +160,7 @@ export default function MembroHomePage() {
         {person.assigned_leader && (
           <Card>
             <h3 className="mb-3 font-semibold text-ink">Meu acompanhamento</h3>
-            <p className="text-sm text-ink/60">Responsável por você</p>
+            <p className="text-sm text-ink/60">ResponsÃ¡vel por vocÃª</p>
             <div className="mt-2 flex items-center justify-between rounded-md border border-line px-3 py-2.5">
               <p className="text-sm font-semibold text-ink">{person.assigned_leader}</p>
               <a href={buildWhatsAppUrl(person.phone, `Ola ${person.preferred_name || person.name}, paz!`)} target="_blank" className="rounded-md border border-line p-2 text-moss hover:bg-sage">
@@ -158,3 +173,5 @@ export default function MembroHomePage() {
     </PageShell>
   );
 }
+
+
