@@ -8,7 +8,7 @@ const siteUrl = "https://gestao-membros-wa.vercel.app";
 
 const links = [
   { label: "Cadastro de membro", url: `${siteUrl}/cadastro` },
-  { label: "Cadastro de visitante", url: `${siteUrl}/visitante/cadastro` }
+  { label: "Cadastro de visitante", url: `${siteUrl}/registro-visitante` }
 ];
 
 export function SignupLinksCard({ showApprovals = false }: { showApprovals?: boolean }) {
