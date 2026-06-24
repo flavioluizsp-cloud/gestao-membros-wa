@@ -142,7 +142,7 @@ export default function DashboardPage() {
             {[
               ["Visitante", countVisitante, "visitante"],
               ["Frequentador", countFrequentador, "frequentadores"],
-              ["Mb. Dependente", countMembroDependente, "membro_dependente"],
+              ["Membro Dep.", countMembroDependente, "membro_dependente"],
               ["Membro", countMembro, "membros"],
               ["Afastado", countAfastado, "afastado"],
               ["Transferido", countTransferido, "transferido"],
