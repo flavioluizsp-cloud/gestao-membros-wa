@@ -11,6 +11,13 @@ import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { AccessContext, Person } from "@/lib/types";
 
+function normalizeName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [access, setAccess] = useState<AccessContext | null>(null);
@@ -29,13 +36,15 @@ export default function PeoplePage() {
     loadPeople();
   }, []);
 
-  const normalizedSearch = search.trim().toLowerCase();
+  const normalizedSearch = normalizeName(search.trim());
   const filteredPeople = useMemo(() => {
     const matches = normalizedSearch
       ? people.filter((person) => {
           const haystack = [person.name, person.preferred_name]
             .filter(Boolean)
             .join(" ")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
             .toLowerCase();
           return haystack.includes(normalizedSearch);
         })
