@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { HeartHandshake, MessageCircle, Users } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { MessageCircle, Users } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { membrosDb, supabase } from "@/lib/supabase";
@@ -70,18 +69,14 @@ export default function DashboardPage() {
     );
   }
 
-  const month = new Date().getMonth();
-  const visitorsThisMonth = people.filter((person) => person.status === "visitante" && new Date(person.created_at).getMonth() === month);
   const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
   const departments = buildDepartmentRows(people, departmentAssignments);
   const familyGroups = buildFamilyGroupRows(people, familyGroupAssignments);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
-
-  const stats: Array<[string, number, LucideIcon]> = [
-    ["Pessoas cadastradas", people.length, Users],
-    ["Visitantes do mes", visitorsThisMonth.length, HeartHandshake]
-  ];
+  const approvedPeople = people.filter((person) => !person.pending_approval).length;
+  const members = people.filter((person) => person.status === "membro").length;
+  const regularAttendees = people.filter((person) => person.status === "frequentador").length;
 
   const overviewCards: OverviewCard[] = [
     {
@@ -129,17 +124,33 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {stats.map(([label, value, Icon]) => (
-          <Card key={label}>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-ink/65">{label}</p>
-              <Icon className="h-5 w-5 text-moss" />
+      <Link href="/pessoas" className="block">
+        <Card className="hover:bg-sage/40">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-ink">Pessoas</h3>
+              <p className="mt-1 text-sm text-ink/60">Visao geral dos cadastros da igreja.</p>
             </div>
-            <p className="mt-3 text-3xl font-bold text-ink">{value}</p>
-          </Card>
-        ))}
-      </div>
+            <Users className="h-5 w-5 text-moss" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              ["Pessoas cadastradas", approvedPeople],
+              ["Membros", members],
+              ["Frequentadores", regularAttendees],
+              ["Total geral", people.length]
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-md border border-line bg-white px-3 py-3">
+                <p className="text-xs font-medium text-ink/60">{label}</p>
+                <p className="mt-2 text-2xl font-bold text-ink">{value}</p>
+              </div>
+            ))}
+          </div>
+          <span className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-line px-3 py-2 text-sm font-semibold text-moss">
+            Abrir Pessoas
+          </span>
+        </Card>
+      </Link>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {overviewCards.map((card) => (
