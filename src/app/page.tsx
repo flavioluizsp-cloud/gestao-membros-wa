@@ -346,7 +346,7 @@ function DemographicsCard({ people }: { people: Person[] }) {
             </>
           );
           return href ? (
-            <a key={label} href={href} className="rounded-md border border-line bg-white px-2 py-3 text-center hover:border-moss hover:bg-sage">{content}</a>
+            <Link key={label} href={href} className="rounded-md border border-line bg-white px-2 py-3 text-center hover:border-moss hover:bg-sage">{content}</Link>
           ) : (
             <div key={label} className="rounded-md border border-line bg-white px-2 py-3 text-center">{content}</div>
           );
@@ -374,12 +374,12 @@ function DemographicsCard({ people }: { people: Person[] }) {
         <Section title="Estado civil" items={[
           { label: "Casados", value: married, href: "/pessoas?filtro=casado" },
           { label: "Solteiros", value: single, href: "/pessoas?filtro=solteiro" },
-          { label: "Outros", value: otherMarital },
+          { label: "Outros", value: otherMarital, href: "/pessoas?filtro=outro_estado_civil" },
           { label: "Nao informado", value: demoScope.filter((p) => !p.marital_status).length, href: "/pessoas?filtro=sem_estado_civil" },
         ]} />
         <Section title="Batismo" items={[
           { label: "Sim", value: baptized, href: "/pessoas?filtro=batizados" },
-          { label: "Nao", value: notBaptized, href: "/pessoas?filtro=sem_batismo" },
+          { label: "Nao", value: notBaptized, href: "/pessoas?filtro=nao_batizados" },
         ]} />
         <Section title="Grupos Familiares" items={[
           { label: "Com GF", value: withGF, href: "/pessoas?filtro=com_gf" },

@@ -27,6 +27,17 @@ function normalizeName(value: string) {
     .toLocaleLowerCase("pt-BR");
 }
 
+function getAge(person: Person) {
+  if (!person.birth_date) return null;
+  const birthDate = new Date(person.birth_date);
+  if (Number.isNaN(birthDate.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getUTCFullYear();
+  const monthDifference = today.getMonth() - birthDate.getUTCMonth();
+  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getUTCDate())) age--;
+  return age;
+}
+
 export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [access, setAccess] = useState<AccessContext | null>(null);
@@ -36,14 +47,7 @@ export default function PeoplePage() {
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "recent" | "oldest">("name_asc");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const filtro = params.get("filtro") ?? "";
-    const demograficos = ["criancas","jovens","adultos","idosos","nao_informado_idade","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"];
-    if (demograficos.includes(filtro)) {
-      setMissingFilter(filtro);
-    } else {
-      setDashboardFilter(filtro);
-    }
+    setDashboardFilter(new URLSearchParams(window.location.search).get("filtro") ?? "");
 
     async function loadPeople() {
       if (!supabase || !membrosDb) return;
@@ -66,6 +70,24 @@ export default function PeoplePage() {
       if (dashboardFilter === "visitante") return person.status === "visitante";
       if (dashboardFilter === "afastado") return person.status === "afastado";
       if (dashboardFilter === "transferido") return person.status === "transferido";
+      const demographicStatuses = ["membro", "membro_dependente", "frequentador"];
+      if (["gender_m", "gender_f", "gender_none", "criancas", "jovens", "adultos", "idosos", "nao_informado_idade", "casado", "solteiro", "outro_estado_civil", "sem_estado_civil", "batizados", "nao_batizados", "com_gf", "sem_gf"].includes(dashboardFilter) && !demographicStatuses.includes(person.status)) return false;
+      if (dashboardFilter === "gender_m") return person.gender === "M";
+      if (dashboardFilter === "gender_f") return person.gender === "F";
+      if (dashboardFilter === "gender_none") return !person.gender;
+      if (dashboardFilter === "criancas") { const age = getAge(person); return age !== null && age <= 12; }
+      if (dashboardFilter === "jovens") { const age = getAge(person); return age !== null && age >= 13 && age <= 25; }
+      if (dashboardFilter === "adultos") { const age = getAge(person); return age !== null && age >= 26 && age <= 59; }
+      if (dashboardFilter === "idosos") { const age = getAge(person); return age !== null && age >= 60; }
+      if (dashboardFilter === "nao_informado_idade") return getAge(person) === null;
+      if (dashboardFilter === "casado") return person.marital_status === "casado";
+      if (dashboardFilter === "solteiro") return person.marital_status === "solteiro";
+      if (dashboardFilter === "outro_estado_civil") return Boolean(person.marital_status && !["casado", "solteiro"].includes(person.marital_status));
+      if (dashboardFilter === "sem_estado_civil") return !person.marital_status;
+      if (dashboardFilter === "batizados") return person.is_baptized;
+      if (dashboardFilter === "nao_batizados") return !person.is_baptized;
+      if (dashboardFilter === "com_gf") return Boolean(person.family_group);
+      if (dashboardFilter === "sem_gf") return !person.family_group;
       return true;
     });
     const pendingMatches = statusMatches.filter((person) => {
@@ -77,34 +99,6 @@ export default function PeoplePage() {
       if (missingFilter === "sem_departamento") return (person.departments ?? []).length === 0;
       if (missingFilter === "sem_cidade") return !person.birth_city?.trim();
       if (missingFilter === "sem_batismo") return !person.is_baptized && !person.baptism_date && !person.baptism_church;
-      const demoStatuses = ["membro", "membro_dependente", "frequentador"];
-      if (["criancas","jovens","adultos","idosos","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"].includes(missingFilter)) {
-        if (!demoStatuses.includes(person.status)) return false;
-      }
-      const getAge = (p: typeof person) => {
-        if (!p.birth_date) return null;
-        const d = new Date(p.birth_date);
-        if (isNaN(d.getTime())) return null;
-        const today = new Date();
-        let age = today.getFullYear() - d.getFullYear();
-        const m = today.getMonth() - d.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
-        return age;
-      };
-      if (missingFilter === "nao_informado_idade") return !person.birth_date;
-      if (missingFilter === "nao_informado_idade") return !person.birth_date;
-      if (missingFilter === "nao_informado_idade") return !person.birth_date;
-      if (missingFilter === "criancas") { const a = getAge(person); return a !== null && a <= 12; }
-      if (missingFilter === "jovens") { const a = getAge(person); return a !== null && a >= 13 && a <= 25; }
-      if (missingFilter === "adultos") { const a = getAge(person); return a !== null && a >= 26 && a <= 59; }
-      if (missingFilter === "idosos") { const a = getAge(person); return a !== null && a >= 60; }
-      if (missingFilter === "casado") return person.marital_status === "casado";
-      if (missingFilter === "solteiro") return person.marital_status === "solteiro";
-      if (missingFilter === "batizados") return Boolean(person.is_baptized);
-      if (missingFilter === "com_gf") return Boolean(person.family_group);
-      if (missingFilter === "gender_m") return person.gender === "M";
-      if (missingFilter === "gender_f") return person.gender === "F";
-      if (missingFilter === "gender_none") return !person.gender;
       return true;
     });
     const matches = normalizedSearch
@@ -144,6 +138,11 @@ export default function PeoplePage() {
     gender_m: "Masculino",
     gender_f: "Feminino",
     gender_none: "Genero nao informado",
+    nao_informado_idade: "Idade nao informada",
+    outro_estado_civil: "Outros estados civis",
+    sem_estado_civil: "Estado civil nao informado",
+    nao_batizados: "Nao batizados",
+    sem_gf: "Sem Grupo Familiar",
     todas: "Total geral"
   };
 
