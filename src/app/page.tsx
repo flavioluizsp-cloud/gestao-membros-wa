@@ -142,7 +142,7 @@ export default function DashboardPage() {
             {[
               ["Visitante", countVisitante, "visitante"],
               ["Frequentador", countFrequentador, "frequentadores"],
-              ["Mb. dependente", countMembroDependente, "membro_dependente"],
+              ["Mb. Dependente", countMembroDependente, "membro_dependente"],
               ["Membro", countMembro, "membros"],
               ["Afastado", countAfastado, "afastado"],
               ["Transferido", countTransferido, "transferido"],
@@ -153,14 +153,10 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="rounded-md border border-line bg-sage px-3 py-2.5 text-center">
               <p className="text-xs text-ink/60">Total cadastros</p>
               <p className="mt-1 text-lg font-bold text-ink">{approvedPeople}</p>
-            </div>
-            <div className="rounded-md border border-moss bg-sage px-3 py-2.5 text-center">
-              <p className="text-xs text-ink/60">Votam em assembleia</p>
-              <p className="mt-1 text-lg font-bold text-moss">{countMembro}</p>
             </div>
             <div className="rounded-md border border-line bg-sage px-3 py-2.5 text-center">
               <p className="text-xs text-ink/60">Presenca total</p>
