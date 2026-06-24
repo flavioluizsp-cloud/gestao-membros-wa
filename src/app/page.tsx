@@ -369,7 +369,7 @@ function DemographicsCard({ people }: { people: Person[] }) {
           { label: "Jovens 13-25", value: youth, href: "/pessoas?filtro=jovens" },
           { label: "Adultos 26-59", value: adults, href: "/pessoas?filtro=adultos" },
           { label: "Idosos 60+", value: seniors, href: "/pessoas?filtro=idosos" },
-          { label: "Nao informado", value: noAge, href: "/pessoas?filtro=sem_aniversario" },
+          { label: "Nao informado", value: noAge, href: "/pessoas?filtro=nao_informado_idade" },
         ]} />
         <Section title="Estado civil" items={[
           { label: "Casados", value: married, href: "/pessoas?filtro=casado" },

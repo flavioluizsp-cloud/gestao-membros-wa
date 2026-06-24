@@ -70,7 +70,7 @@ export default function PeoplePage() {
     });
     const pendingMatches = statusMatches.filter((person) => {
       if (missingFilter === "sem_gf") return !person.family_group;
-      if (missingFilter === "sem_aniversario") return !person.birth_date;
+      if (missingFilter === "sem_aniversario" || missingFilter === "nao_informado_idade") return !person.birth_date;
       if (missingFilter === "sem_email") return !person.email?.trim();
       if (missingFilter === "sem_telefone") return !person.phone?.trim();
       if (missingFilter === "sem_familia") return (person.family_members ?? []).length === 0;
@@ -91,6 +91,9 @@ export default function PeoplePage() {
         if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
         return age;
       };
+      if (missingFilter === "nao_informado_idade") return !person.birth_date;
+      if (missingFilter === "nao_informado_idade") return !person.birth_date;
+      if (missingFilter === "nao_informado_idade") return !person.birth_date;
       if (missingFilter === "criancas") { const a = getAge(person); return a !== null && a <= 12; }
       if (missingFilter === "jovens") { const a = getAge(person); return a !== null && a >= 13 && a <= 25; }
       if (missingFilter === "adultos") { const a = getAge(person); return a !== null && a >= 26 && a <= 59; }
