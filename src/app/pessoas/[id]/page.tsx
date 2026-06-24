@@ -393,6 +393,16 @@ export default function PersonProfilePage({ params }: PageProps) {
           </div>
         </Card>
 
+        {access?.isLeader && !access?.isAdminLike ? (
+          <Card>
+            <h3 className="mb-3 text-lg font-semibold">Informacao da lideranca</h3>
+            <div className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
+              <span className="text-sm text-ink/60">Status</span>
+              <span className="text-sm font-semibold text-moss">{personStatusLabels[form.status]}</span>
+            </div>
+          </Card>
+        ) : null}
+
         {canManageRestricted ? (
           <Card>
             <h3 className="mb-4 text-lg font-semibold">3. Informacoes administrativas</h3>

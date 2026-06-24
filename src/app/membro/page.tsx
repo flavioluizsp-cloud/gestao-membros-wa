@@ -6,7 +6,6 @@ import { MessageCircle } from "lucide-react";
 import { Badge, Card, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { formatDate, isBirthdayThisWeek } from "@/lib/date";
-import { personStatusLabels } from "@/lib/labels";
 import { membrosDb } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { AccessContext, Person } from "@/lib/types";
@@ -95,10 +94,6 @@ export default function MembroHomePage() {
                 <span className="font-medium text-ink">{formatDate(person.birth_date)}</span>
               </div>
             ) : null}
-            <div className="flex justify-between">
-              <span className="text-ink/60">Status</span>
-              <span className="font-medium text-moss">{personStatusLabels[person.status]}</span>
-            </div>
           </div>
         </Card>
 

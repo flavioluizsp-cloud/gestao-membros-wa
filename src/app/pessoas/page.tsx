@@ -131,7 +131,7 @@ export default function PeoplePage() {
               <Link href={`/pessoas/${person.id}`} className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold">{person.preferred_name || person.name}</h3>
-                  <Badge>{personStatusLabels[person.status]}</Badge>
+                  {access?.isAdminLike || access?.isLeader ? <Badge>{personStatusLabels[person.status]}</Badge> : null}
                 </div>
                 {person.preferred_name ? <p className="mt-1 text-sm text-ink/60">{person.name}</p> : null}
                 <p className="mt-2 text-sm text-ink/65">{person.phone} · nasc. {formatDate(person.birth_date)}</p>

@@ -162,7 +162,7 @@ export default function SegmentPage({ params }: PageProps) {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold">{person.name}</p>
-                  <Badge>{person.status}</Badge>
+                  {isLeader ? <Badge>{person.status}</Badge> : null}
                 </div>
                 <p className="mt-1 text-sm text-ink/60">{person.phone} - nasc. {formatDate(person.birth_date)}</p>
                 <p className="mt-1 text-sm text-ink/60">GF: {person.family_group ?? "Sem grupo"} - Atribuicao: {person.assigned_leader ?? "-"}</p>
