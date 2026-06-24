@@ -70,6 +70,22 @@ export default function PeoplePage() {
       if (missingFilter === "sem_departamento") return (person.departments ?? []).length === 0;
       if (missingFilter === "sem_cidade") return !person.birth_city?.trim();
       if (missingFilter === "sem_batismo") return !person.is_baptized && !person.baptism_date && !person.baptism_church;
+      const getAge = (p: typeof person) => {
+        const d = p.birth_date ? new Date(p.birth_date) : null;
+        if (!d) return null;
+        return new Date().getFullYear() - d.getFullYear();
+      };
+      if (missingFilter === "criancas") { const a = getAge(person); return a !== null && a <= 12; }
+      if (missingFilter === "jovens") { const a = getAge(person); return a !== null && a >= 13 && a <= 25; }
+      if (missingFilter === "adultos") { const a = getAge(person); return a !== null && a >= 26 && a <= 59; }
+      if (missingFilter === "idosos") { const a = getAge(person); return a !== null && a >= 60; }
+      if (missingFilter === "casado") return person.marital_status === "casado";
+      if (missingFilter === "solteiro") return person.marital_status === "solteiro";
+      if (missingFilter === "batizados") return Boolean(person.is_baptized);
+      if (missingFilter === "com_gf") return Boolean(person.family_group);
+      if (missingFilter === "gender_m") return person.gender === "M";
+      if (missingFilter === "gender_f") return person.gender === "F";
+      if (missingFilter === "gender_none") return !person.gender;
       return true;
     });
     const matches = normalizedSearch
@@ -98,6 +114,17 @@ export default function PeoplePage() {
     visitante: "Visitantes",
     afastado: "Afastados",
     transferido: "Transferidos",
+    criancas: "Criancas (0-12)",
+    jovens: "Jovens (13-25)",
+    adultos: "Adultos (26-59)",
+    idosos: "Idosos (60+)",
+    casado: "Casados",
+    solteiro: "Solteiros",
+    batizados: "Batizados",
+    com_gf: "Com Grupo Familiar",
+    gender_m: "Masculino",
+    gender_f: "Feminino",
+    gender_none: "Genero nao informado",
     todas: "Total geral"
   };
 

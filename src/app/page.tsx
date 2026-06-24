@@ -355,28 +355,28 @@ function DemographicsCard({ people }: { people: Person[] }) {
       <h3 className="mb-5 font-semibold text-ink">Analise demografica</h3>
       <div className="space-y-5">
         <Section title="Genero" items={[
-          { label: "Masculino", value: males },
-          { label: "Feminino", value: females },
-          { label: "Nao informado", value: noGender },
+          { label: "Masculino", value: males, href: "/pessoas?filtro=gender_m" },
+          { label: "Feminino", value: females, href: "/pessoas?filtro=gender_f" },
+          { label: "Nao informado", value: noGender, href: "/pessoas?filtro=gender_none" },
         ]} />
         <Section title="Faixa etaria" items={[
           { label: "Criancas 0-12", value: children, href: "/pessoas?filtro=criancas" },
           { label: "Jovens 13-25", value: youth, href: "/pessoas?filtro=jovens" },
-          { label: "Adultos 26-59", value: adults },
-          { label: "Idosos 60+", value: seniors },
+          { label: "Adultos 26-59", value: adults, href: "/pessoas?filtro=adultos" },
+          { label: "Idosos 60+", value: seniors, href: "/pessoas?filtro=idosos" },
           { label: "Sem idade", value: noAge, href: "/pessoas?filtro=sem_aniversario" },
         ]} />
         <Section title="Estado civil" items={[
-          { label: "Casados", value: married },
-          { label: "Solteiros", value: single },
+          { label: "Casados", value: married, href: "/pessoas?filtro=casado" },
+          { label: "Solteiros", value: single, href: "/pessoas?filtro=solteiro" },
           { label: "Outros", value: otherMarital },
         ]} />
         <Section title="Batismo" items={[
-          { label: "Batizados", value: baptized },
+          { label: "Batizados", value: baptized, href: "/pessoas?filtro=batizados" },
           { label: "Nao batizados", value: notBaptized, href: "/pessoas?filtro=sem_batismo" },
         ]} />
         <Section title="Grupos Familiares" items={[
-          { label: "Com GF", value: withGF },
+          { label: "Com GF", value: withGF, href: "/pessoas?filtro=com_gf" },
           { label: "Sem GF", value: withoutGF, href: "/pessoas?filtro=sem_gf" },
         ]} />
       </div>
