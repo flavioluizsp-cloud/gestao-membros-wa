@@ -54,7 +54,11 @@ export default function PeoplePage() {
     const statusMatches = people.filter((person) => {
       if (dashboardFilter === "cadastradas") return !person.pending_approval;
       if (dashboardFilter === "membros") return person.status === "membro";
+      if (dashboardFilter === "membro_dependente") return person.status === "membro_dependente";
       if (dashboardFilter === "frequentadores") return person.status === "frequentador";
+      if (dashboardFilter === "visitante") return person.status === "visitante";
+      if (dashboardFilter === "afastado") return person.status === "afastado";
+      if (dashboardFilter === "transferido") return person.status === "transferido";
       return true;
     });
     const pendingMatches = statusMatches.filter((person) => {
@@ -89,7 +93,11 @@ export default function PeoplePage() {
   const filterLabels: Record<string, string> = {
     cadastradas: "Pessoas cadastradas",
     membros: "Membros",
+    membro_dependente: "Membros dependentes",
     frequentadores: "Frequentadores",
+    visitante: "Visitantes",
+    afastado: "Afastados",
+    transferido: "Transferidos",
     todas: "Total geral"
   };
 
