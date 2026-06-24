@@ -334,15 +334,21 @@ function DemographicsCard({ people }: { people: Person[] }) {
   const withoutGF = demoScope.filter((p) => !p.family_group).length;
 
   type StatItem = { label: string; value: number; href?: string };
-  const Section = ({ title, items }: { title: string; items: StatItem[] }) => (
-    <div>
-      <p className="mb-2 text-sm font-semibold text-ink border-b border-line pb-1">{title}</p>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-        {items.map(({ label, value, href }) => {
+  const Section = ({ title, items }: { title: string; items: StatItem[] }) => {
+    const total = items.reduce((sum, item) => sum + item.value, 0);
+    return (
+      <div>
+        <p className="mb-2 text-sm font-semibold text-ink border-b border-line pb-1">{title}</p>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          {items.map(({ label, value, href }) => {
+            const percentage = total > 0 ? (value / total) * 100 : 0;
           const content = (
             <>
               <p className="text-xs text-ink/60 leading-tight">{label}</p>
-              <p className="mt-1.5 text-xl font-bold text-ink">{value}</p>
+              <div className="mt-1.5 flex items-baseline justify-center gap-1.5">
+                <span className="text-xl font-bold text-ink">{value}</span>
+                <span className="text-[10px] font-medium text-ink/45">{percentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</span>
+              </div>
             </>
           );
           return href ? (
@@ -350,10 +356,11 @@ function DemographicsCard({ people }: { people: Person[] }) {
           ) : (
             <div key={label} className="rounded-md border border-line bg-white px-2 py-3 text-center">{content}</div>
           );
-        })}
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Card className="mt-6">
