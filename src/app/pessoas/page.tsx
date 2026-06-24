@@ -33,22 +33,7 @@ export default function PeoplePage() {
   const filteredPeople = useMemo(() => {
     const matches = normalizedSearch
       ? people.filter((person) => {
-          const haystack = [
-            person.name,
-            person.preferred_name,
-            person.phone,
-            person.email,
-            person.birth_city,
-            person.family_group,
-            person.family_group_leader,
-            person.assigned_leader,
-            person.baptism_church,
-            person.baptizing_pastor,
-            ...(person.departments ?? []),
-            ...(person.department_roles ?? []),
-            ...(person.ecclesiastical_roles ?? []),
-            ...(person.administrative_roles ?? [])
-          ]
+          const haystack = [person.name, person.preferred_name]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
@@ -77,7 +62,7 @@ export default function PeoplePage() {
       <Card className="mb-5">
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
           <Field label="Pesquisar pessoa">
-            <input className={inputClass} placeholder="Digite nome, telefone, departamento, grupo ou cidade" value={search} onChange={(event) => setSearch(event.target.value)} />
+            <input className={inputClass} placeholder="Digite o nome completo ou como a pessoa e conhecida" value={search} onChange={(event) => setSearch(event.target.value)} />
           </Field>
           <Field label="Ordenar por">
             <div className="relative">
@@ -117,7 +102,7 @@ export default function PeoplePage() {
         ))}
       </div>
       {people.length === 0 ? <EmptyState title="Nenhuma pessoa cadastrada" text="Cadastre a primeira pessoa pelo botao Nova pessoa." /> : null}
-      {people.length > 0 && filteredPeople.length === 0 ? <EmptyState title="Nenhum resultado" text="Tente buscar por outro nome, telefone, departamento ou grupo." /> : null}
+      {people.length > 0 && filteredPeople.length === 0 ? <EmptyState title="Nenhum resultado" text="Tente buscar pelo nome completo ou por como a pessoa e conhecida." /> : null}
     </PageShell>
   );
 }
