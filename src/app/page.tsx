@@ -59,7 +59,33 @@ export default function DashboardPage() {
   }, [router]);
 
   if (loading) {
-    return (
+    const maleNames = ["jose","joao","pedro","paulo","marcos","lucas","mateus","andre","felipe","carlos","antonio","francisco","raimundo","manoel","joaquim","jorge","roberto","fernando","marcelo","rafael","daniel","gabriel","samuel","elias","davi","isaias","jeremias","ezequiel","amos","oseas","miqueas","naum","habacuque","sofonias","ageu","zacarias","malaquias","joel","obadias","jonas","rufus","tiago","simao","bartolomeu","natanael","timoteo","tito","filemom","estevao","filipe","nicodemos","lazaro","zaqueu","cornelio","barnabe","silas","clemente","onesifo","aristarco","gaio","epafras","trofimo","tiquico","crescente","demas","hermas","hermes","patrobas","filolo","olimpas","nereo","junias","andronicus","herodion","sosipater","lucio","jasao","sosipater","tertio","erasto","quarto","fortunato","acaico","estafanas"];
+  const guessGender = (name: string) => {
+    const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return maleNames.includes(first) ? "M" : "F";
+  };
+  const males = people.filter((p) => guessGender(p.name) === "M").length;
+  const females = people.filter((p) => guessGender(p.name) === "F").length;
+  const getAge = (p: Person) => {
+    const d = p.birth_date ? new Date(p.birth_date) : null;
+    if (!d) return null;
+    const age = new Date().getFullYear() - d.getFullYear();
+    return age;
+  };
+  const children = people.filter((p) => { const a = getAge(p); return a !== null && a <= 12; }).length;
+  const youth = people.filter((p) => { const a = getAge(p); return a !== null && a >= 13 && a <= 25; }).length;
+  const adults = people.filter((p) => { const a = getAge(p); return a !== null && a >= 26 && a <= 59; }).length;
+  const seniors = people.filter((p) => { const a = getAge(p); return a !== null && a >= 60; }).length;
+  const noAge = people.filter((p) => getAge(p) === null).length;
+  const married = people.filter((p) => p.marital_status === "casado").length;
+  const single = people.filter((p) => p.marital_status === "solteiro").length;
+  const otherMarital = people.filter((p) => p.marital_status && p.marital_status !== "casado" && p.marital_status !== "solteiro").length;
+  const baptized = people.filter((p) => p.is_baptized).length;
+  const notBaptized = people.filter((p) => !p.is_baptized).length;
+  const withGF = people.filter((p) => p.family_group).length;
+  const withoutGF = people.filter((p) => !p.family_group).length;
+
+  return (
       <PageShell>
         <div className="rounded-lg border border-line bg-white p-6 shadow-soft">
           <p className="text-sm font-semibold text-ink">Carregando seus dados...</p>
@@ -171,6 +197,7 @@ export default function DashboardPage() {
         </Link>
       </Card>
 
+      <DemographicsCard people={people} />
       <BirthdaysCard birthdays={birthdaysVisible} hiddenBirthdays={birthdaysHidden} />
     </PageShell>
   );
@@ -282,4 +309,58 @@ function findSegmentLeader(departmentName: string, members: Person[], department
   if (leader) return leader.name;
   if (coLeader) return coLeader.name;
   return "Sem lider definido";
+}
+
+function DemographicsCard({ people }: { people: Person[] }) {
+  const maleNames = ["jose","joao","pedro","paulo","marcos","lucas","mateus","andre","felipe","carlos","antonio","francisco","raimundo","manoel","joaquim","jorge","roberto","fernando","marcelo","rafael","daniel","gabriel","samuel","elias","davi","isaias","jeremias","ezequiel","amos","oseas","miqueas","naum","habacuque","sofonias","ageu","zacarias","malaquias","joel","obadias","jonas","rufus","tiago","simao","bartolomeu","natanael","timoteo","tito","filemom","estevao","filipe","nicodemos","lazaro","zaqueu","cornelio","barnabe","silas","clemente","onesifo","aristarco","gaio","epafras","trofimo","tiquico","crescente","demas","hermas","hermes","patrobas","filolo","olimpas","nereo","junias","andronicus","herodion","sosipater","lucio","jasao","sosipater","tertio","erasto","quarto","fortunato","acaico","estafanas"];
+  const guessGender = (name: string) => {
+    const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return maleNames.includes(first) ? "M" : "F";
+  };
+  const males = people.filter((p) => guessGender(p.name) === "M").length;
+  const females = people.filter((p) => guessGender(p.name) === "F").length;
+  const getAge = (p: Person) => {
+    const d = p.birth_date ? new Date(p.birth_date) : null;
+    if (!d) return null;
+    return new Date().getFullYear() - d.getFullYear();
+  };
+  const children = people.filter((p) => { const a = getAge(p); return a !== null && a <= 12; }).length;
+  const youth = people.filter((p) => { const a = getAge(p); return a !== null && a >= 13 && a <= 25; }).length;
+  const adults = people.filter((p) => { const a = getAge(p); return a !== null && a >= 26 && a <= 59; }).length;
+  const seniors = people.filter((p) => { const a = getAge(p); return a !== null && a >= 60; }).length;
+  const noAge = people.filter((p) => getAge(p) === null).length;
+  const married = people.filter((p) => p.marital_status === "casado").length;
+  const single = people.filter((p) => p.marital_status === "solteiro").length;
+  const otherMarital = people.filter((p) => p.marital_status && p.marital_status !== "casado" && p.marital_status !== "solteiro").length;
+  const baptized = people.filter((p) => p.is_baptized).length;
+  const notBaptized = people.filter((p) => !p.is_baptized).length;
+  const withGF = people.filter((p) => p.family_group).length;
+  const withoutGF = people.filter((p) => !p.family_group).length;
+
+  const Section = ({ title, items }: { title: string; items: [string, number][] }) => (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">{title}</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {items.map(([label, value]) => (
+          <div key={label} className="rounded-md border border-line bg-white px-3 py-2.5 text-center">
+            <p className="text-xs text-ink/60">{label}</p>
+            <p className="mt-1 text-lg font-bold text-ink">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <Card className="mt-6">
+      <h3 className="mb-4 font-semibold text-ink">Analise demografica</h3>
+      <div className="space-y-5">
+        <Section title="Genero (estimado pelo nome)" items={[["Homens", males], ["Mulheres", females]]} />
+        <Section title="Faixa etaria" items={[["Criancas (0-12)", children], ["Jovens (13-25)", youth], ["Adultos (26-59)", adults], ["Idosos (60+)", seniors]]} />
+        <Section title="Estado civil" items={[["Casados", married], ["Solteiros", single], ["Outros", otherMarital]]} />
+        <Section title="Batismo" items={[["Batizados", baptized], ["Nao batizados", notBaptized]]} />
+        <Section title="Grupos Familiares" items={[["Com GF", withGF], ["Sem GF", withoutGF]]} />
+      </div>
+    </Card>
+  );
 }
