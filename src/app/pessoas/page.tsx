@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { MessageCircle, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowUpDown, MessageCircle, Plus } from "lucide-react";
 import { Badge, Card, EmptyState, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { formatDate } from "@/lib/date";
@@ -15,6 +15,7 @@ export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "recent" | "oldest">("name_asc");
 
   useEffect(() => {
     async function loadPeople() {
@@ -29,30 +30,42 @@ export default function PeoplePage() {
   }, []);
 
   const normalizedSearch = search.trim().toLowerCase();
-  const filteredPeople = normalizedSearch
-    ? people.filter((person) => {
-        const haystack = [
-          person.name,
-          person.preferred_name,
-          person.phone,
-          person.email,
-          person.birth_city,
-          person.family_group,
-          person.family_group_leader,
-          person.assigned_leader,
-          person.baptism_church,
-          person.baptizing_pastor,
-          ...(person.departments ?? []),
-          ...(person.department_roles ?? []),
-          ...(person.ecclesiastical_roles ?? []),
-          ...(person.administrative_roles ?? [])
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(normalizedSearch);
-      })
-    : people;
+  const filteredPeople = useMemo(() => {
+    const matches = normalizedSearch
+      ? people.filter((person) => {
+          const haystack = [
+            person.name,
+            person.preferred_name,
+            person.phone,
+            person.email,
+            person.birth_city,
+            person.family_group,
+            person.family_group_leader,
+            person.assigned_leader,
+            person.baptism_church,
+            person.baptizing_pastor,
+            ...(person.departments ?? []),
+            ...(person.department_roles ?? []),
+            ...(person.ecclesiastical_roles ?? []),
+            ...(person.administrative_roles ?? [])
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(normalizedSearch);
+        })
+      : people;
+
+    return [...matches].sort((a, b) => {
+      const nameA = (a.preferred_name || a.name).trim();
+      const nameB = (b.preferred_name || b.name).trim();
+
+      if (sortBy === "name_desc") return nameB.localeCompare(nameA, "pt-BR");
+      if (sortBy === "recent") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return nameA.localeCompare(nameB, "pt-BR");
+    });
+  }, [normalizedSearch, people, sortBy]);
 
   return (
     <PageShell>
@@ -62,9 +75,22 @@ export default function PeoplePage() {
         action={access?.isAdminLike || access?.isLeader ? <Link href="/pessoas/novo" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Nova pessoa</Link> : null}
       />
       <Card className="mb-5">
-        <Field label="Pesquisar pessoa">
-          <input className={inputClass} placeholder="Digite nome, telefone, departamento, grupo ou cidade" value={search} onChange={(event) => setSearch(event.target.value)} />
-        </Field>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
+          <Field label="Pesquisar pessoa">
+            <input className={inputClass} placeholder="Digite nome, telefone, departamento, grupo ou cidade" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </Field>
+          <Field label="Ordenar por">
+            <div className="relative">
+              <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/55" />
+              <select className={`${inputClass} pl-9`} value={sortBy} onChange={(event) => setSortBy(event.target.value as typeof sortBy)}>
+                <option value="name_asc">Nome: A-Z</option>
+                <option value="name_desc">Nome: Z-A</option>
+                <option value="recent">Mais recentes</option>
+                <option value="oldest">Mais antigos</option>
+              </select>
+            </div>
+          </Field>
+        </div>
         <p className="mt-2 text-sm text-ink/60">{filteredPeople.length} de {people.length} pessoas encontradas</p>
       </Card>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
