@@ -70,6 +70,8 @@ export default function DashboardPage() {
   }
 
   const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
+  const birthdaysVisible = birthdays.filter((p) => p.status === "membro" || p.status === "membro_dependente");
+  const birthdaysHidden = birthdays.filter((p) => p.status !== "membro" && p.status !== "membro_dependente");
   const departments = buildDepartmentRows(people, departmentAssignments);
   const familyGroups = buildFamilyGroupRows(people, familyGroupAssignments);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
@@ -175,7 +177,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <BirthdaysCard birthdays={birthdays} />
+      <BirthdaysCard birthdays={birthdaysVisible} hiddenBirthdays={birthdaysHidden} />
     </PageShell>
   );
 }
