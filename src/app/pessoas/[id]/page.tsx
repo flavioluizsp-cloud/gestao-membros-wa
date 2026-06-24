@@ -421,9 +421,14 @@ export default function PersonProfilePage({ params }: PageProps) {
           </Card>
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           {access?.isAdminLike && !isNew ? <button type="button" onClick={removePerson} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700"><Trash2 className="h-4 w-4" />Excluir</button> : <span />}
-          <Button className="gap-2"><Save className="h-4 w-4" />Salvar perfil</Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-56">
+            <Button className="gap-2"><Save className="h-4 w-4" />Salvar perfil</Button>
+            <Link href="/pessoas" className="inline-flex items-center justify-center rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink/70 hover:bg-sage">
+              Voltar para Pessoas
+            </Link>
+          </div>
         </div>
       </form>
     </PageShell>
