@@ -76,7 +76,9 @@ export default function DashboardPage() {
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
   const approvedPeople = people.filter((person) => !person.pending_approval).length;
   const members = people.filter((person) => person.status === "membro").length;
+  const dependentMembers = people.filter((person) => person.status === "membro_dependente").length;
   const regularAttendees = people.filter((person) => person.status === "frequentador").length;
+  const totalCongregants = members + dependentMembers + regularAttendees;
 
   const overviewCards: OverviewCard[] = [
     {
@@ -133,21 +135,26 @@ export default function DashboardPage() {
           <Users className="h-5 w-5 text-moss" />
         </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            ["Pessoas cadastradas", approvedPeople, "cadastradas"],
-            ["Membros", members, "membros"],
-            ["Frequentadores", regularAttendees, "frequentadores"],
-            ["Total geral", people.length, "todas"]
-          ].map(([label, value, filter]) => (
-            <Link
-              key={label}
-              href={`/pessoas?filtro=${filter}`}
-              className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage"
-            >
-              <p className="text-xs font-medium text-ink/60">{label}</p>
-              <p className="mt-2 text-2xl font-bold text-ink">{value}</p>
-            </Link>
-          ))}
+          <Link href="/pessoas?filtro=cadastradas" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
+            <p className="text-xs font-medium text-ink/60">Total cadastros</p>
+            <p className="mt-2 text-2xl font-bold text-ink">{approvedPeople}</p>
+            <p className="mt-1 text-xs text-ink/40">info gerencial</p>
+          </Link>
+          <Link href="/pessoas?filtro=membros" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
+            <p className="text-xs font-medium text-ink/60">Membros</p>
+            <p className="mt-2 text-2xl font-bold text-ink">{members}</p>
+            <p className="mt-1 text-xs text-ink/40">votam em assembleia</p>
+          </Link>
+          <Link href="/pessoas?filtro=frequentadores" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
+            <p className="text-xs font-medium text-ink/60">Frequentadores</p>
+            <p className="mt-2 text-2xl font-bold text-ink">{regularAttendees}</p>
+            <p className="mt-1 text-xs text-ink/40">frequentam o culto</p>
+          </Link>
+          <Link href="/pessoas" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
+            <p className="text-xs font-medium text-ink/60">Presenca total</p>
+            <p className="mt-2 text-2xl font-bold text-ink">{totalCongregants}</p>
+            <p className="mt-1 text-xs text-ink/40">membros + dependentes + freq.</p>
+          </Link>
         </div>
         <Link href="/pessoas" className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-line px-3 py-2 text-sm font-semibold text-moss hover:bg-sage">
           Abrir Pessoas
