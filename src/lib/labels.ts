@@ -3,10 +3,19 @@ import type { PersonStatus, TaskStatus, TaskType, TemplateKey, VisitorOrigin, Vi
 export const personStatusLabels: Record<PersonStatus, string> = {
   visitante: "Visitante",
   frequentador: "Frequentador",
+  membro_dependente: "Membro dependente",
   membro: "Membro",
-  novo_convertido: "Novo convertido",
   afastado: "Afastado",
   transferido: "Transferido"
+};
+
+export const personStatusDescriptions: Record<PersonStatus, string> = {
+  visitante: "Preencheu o cadastro de visitante e aguarda acompanhamento e atribuicao.",
+  frequentador: "Frequenta a igreja, mas ainda nao foi recebido como membro em assembleia.",
+  membro_dependente: "Crianca ou adolescente menor de 18 anos integrado a comunhao, sem direito a voto em assembleia.",
+  membro: "Batizado, recebido como membro e em plena comunhao.",
+  afastado: "Deixou de frequentar a igreja sem desligamento formal.",
+  transferido: "Membro transferido formalmente para outra igreja."
 };
 
 export const visitorOriginLabels: Record<VisitorOrigin, string> = {

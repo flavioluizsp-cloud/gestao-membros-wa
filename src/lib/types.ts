@@ -1,4 +1,4 @@
-export type PersonStatus = "visitante" | "frequentador" | "novo_convertido" | "membro" | "afastado" | "transferido";
+export type PersonStatus = "visitante" | "frequentador" | "membro_dependente" | "membro" | "afastado" | "transferido";
 export type VisitorOrigin = "culto" | "celula" | "indicacao" | "evento" | "online";
 export type VisitorStatus = "novo" | "em_acompanhamento" | "integrado" | "sem_retorno";
 export type TaskType = "ligar" | "visitar" | "orar" | "convidar" | "discipular";

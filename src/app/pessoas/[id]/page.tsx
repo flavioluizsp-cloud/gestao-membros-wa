@@ -6,7 +6,7 @@ import { Save, Trash2 } from "lucide-react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
 import { parseBirthDateInput } from "@/lib/date";
-import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ecclesiasticalRoleOptions, familyGroupOptions, personStatusLabels } from "@/lib/labels";
+import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ecclesiasticalRoleOptions, familyGroupOptions, personStatusDescriptions, personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import type { AccessContext, FamilyMember, MaritalStatus, Person, PersonStatus } from "@/lib/types";
 
@@ -447,6 +447,7 @@ export default function PersonProfilePage({ params }: PageProps) {
                 <select className={inputClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PersonStatus })}>
                   {Object.entries(personStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
+                <p className="mt-2 text-xs leading-relaxed text-ink/60">{personStatusDescriptions[form.status]}</p>
               </Field>
               <Field label="Cargos administrativos">
                 <CheckboxGroup options={administrativeRoleOptions} values={form.administrative_roles} onChange={(values) => setForm({ ...form, administrative_roles: values })} />
