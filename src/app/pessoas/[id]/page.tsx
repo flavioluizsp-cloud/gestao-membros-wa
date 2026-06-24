@@ -249,7 +249,6 @@ export default function PersonProfilePage({ params }: PageProps) {
       <PageHeader
         title={isNew ? "Nova pessoa" : form.preferred_name || form.name || "Perfil"}
         description="Perfil organizado por dados pessoais e dados da igreja."
-        action={<Link className="rounded-md border border-line px-3 py-2 text-sm font-semibold" href="/pessoas">Voltar para Pessoas</Link>}
       />
       {message ? (
         <div className={`fixed left-1/2 top-6 z-[9999] w-[min(92vw,560px)] -translate-x-1/2 rounded-md px-5 py-4 text-center text-base font-bold shadow-2xl ring-2 ring-white ${messageType === "success" ? "bg-emerald-700 text-white" : "bg-red-600 text-white"}`}>
