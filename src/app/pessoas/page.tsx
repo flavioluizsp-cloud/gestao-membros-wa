@@ -32,6 +32,7 @@ export default function PeoplePage() {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [search, setSearch] = useState("");
   const [dashboardFilter, setDashboardFilter] = useState("");
+  const [missingFilter, setMissingFilter] = useState("");
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "recent" | "oldest">("name_asc");
 
   useEffect(() => {
@@ -56,12 +57,23 @@ export default function PeoplePage() {
       if (dashboardFilter === "frequentadores") return person.status === "frequentador";
       return true;
     });
+    const pendingMatches = statusMatches.filter((person) => {
+      if (missingFilter === "sem_gf") return !person.family_group;
+      if (missingFilter === "sem_aniversario") return !person.birth_date && (!person.birth_day || !person.birth_month);
+      if (missingFilter === "sem_email") return !person.email?.trim();
+      if (missingFilter === "sem_telefone") return !person.phone?.trim();
+      if (missingFilter === "sem_familia") return (person.family_members ?? []).length === 0;
+      if (missingFilter === "sem_departamento") return (person.departments ?? []).length === 0;
+      if (missingFilter === "sem_cidade") return !person.birth_city?.trim();
+      if (missingFilter === "sem_batismo") return !person.is_baptized && !person.baptism_date && !person.baptism_church;
+      return true;
+    });
     const matches = normalizedSearch
-      ? statusMatches.filter((person) => {
+      ? pendingMatches.filter((person) => {
           const haystack = normalizeName([person.name, person.preferred_name].filter(Boolean).join(" "));
           return haystack.includes(normalizedSearch);
         })
-      : statusMatches;
+      : pendingMatches;
 
     return [...matches].sort((a, b) => {
       const nameA = (a.preferred_name || a.name).trim();
@@ -72,7 +84,7 @@ export default function PeoplePage() {
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       return nameA.localeCompare(nameB, "pt-BR");
     });
-  }, [dashboardFilter, normalizedSearch, people, sortBy]);
+  }, [dashboardFilter, missingFilter, normalizedSearch, people, sortBy]);
 
   const filterLabels: Record<string, string> = {
     cadastradas: "Pessoas cadastradas",
@@ -89,9 +101,22 @@ export default function PeoplePage() {
         action={access?.isAdminLike || access?.isLeader ? <Link href="/pessoas/novo" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Nova pessoa</Link> : null}
       />
       <Card className="mb-5">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_240px_220px] xl:items-end">
           <Field label="Pesquisar pessoa">
             <input className={inputClass} placeholder="Digite o nome completo ou como a pessoa e conhecida" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </Field>
+          <Field label="Pendencia cadastral">
+            <select className={inputClass} value={missingFilter} onChange={(event) => setMissingFilter(event.target.value)}>
+              <option value="">Todas as pessoas</option>
+              <option value="sem_gf">Sem Grupo Familiar</option>
+              <option value="sem_aniversario">Sem aniversario</option>
+              <option value="sem_email">Sem e-mail</option>
+              <option value="sem_telefone">Sem telefone</option>
+              <option value="sem_familia">Sem familiares</option>
+              <option value="sem_departamento">Sem departamento</option>
+              <option value="sem_cidade">Sem cidade natal</option>
+              <option value="sem_batismo">Sem informacao de batismo</option>
+            </select>
           </Field>
           <Field label="Ordenar por">
             <div className="relative">
@@ -105,20 +130,28 @@ export default function PeoplePage() {
             </div>
           </Field>
         </div>
-        {dashboardFilter && dashboardFilter !== "todas" ? (
+        {dashboardFilter && dashboardFilter !== "todas" || missingFilter ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-md bg-sage px-3 py-1.5 text-sm font-semibold text-moss">
-              Filtro: {filterLabels[dashboardFilter]}
-            </span>
+            {dashboardFilter && dashboardFilter !== "todas" ? (
+              <span className="rounded-md bg-sage px-3 py-1.5 text-sm font-semibold text-moss">
+                Filtro: {filterLabels[dashboardFilter]}
+              </span>
+            ) : null}
+            {missingFilter ? (
+              <span className="rounded-md bg-sage px-3 py-1.5 text-sm font-semibold text-moss">
+                Pendencia: {missingFilter.replace("sem_", "Sem ").replaceAll("_", " ")}
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={() => {
                 setDashboardFilter("");
+                setMissingFilter("");
                 window.history.replaceState({}, "", "/pessoas");
               }}
               className="text-sm font-semibold text-ink/60 hover:text-moss"
             >
-              Limpar filtro
+              Limpar filtros
             </button>
           </div>
         ) : null}
