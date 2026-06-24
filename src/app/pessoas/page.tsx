@@ -31,9 +31,12 @@ export default function PeoplePage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [search, setSearch] = useState("");
+  const [dashboardFilter, setDashboardFilter] = useState("");
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "recent" | "oldest">("name_asc");
 
   useEffect(() => {
+    setDashboardFilter(new URLSearchParams(window.location.search).get("filtro") ?? "");
+
     async function loadPeople() {
       if (!supabase || !membrosDb) return;
       const access = await getAccessContext();
@@ -47,12 +50,18 @@ export default function PeoplePage() {
 
   const normalizedSearch = normalizeName(search.trim());
   const filteredPeople = useMemo(() => {
+    const statusMatches = people.filter((person) => {
+      if (dashboardFilter === "cadastradas") return !person.pending_approval;
+      if (dashboardFilter === "membros") return person.status === "membro";
+      if (dashboardFilter === "frequentadores") return person.status === "frequentador";
+      return true;
+    });
     const matches = normalizedSearch
-      ? people.filter((person) => {
+      ? statusMatches.filter((person) => {
           const haystack = normalizeName([person.name, person.preferred_name].filter(Boolean).join(" "));
           return haystack.includes(normalizedSearch);
         })
-      : people;
+      : statusMatches;
 
     return [...matches].sort((a, b) => {
       const nameA = (a.preferred_name || a.name).trim();
@@ -63,7 +72,14 @@ export default function PeoplePage() {
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       return nameA.localeCompare(nameB, "pt-BR");
     });
-  }, [normalizedSearch, people, sortBy]);
+  }, [dashboardFilter, normalizedSearch, people, sortBy]);
+
+  const filterLabels: Record<string, string> = {
+    cadastradas: "Pessoas cadastradas",
+    membros: "Membros",
+    frequentadores: "Frequentadores",
+    todas: "Total geral"
+  };
 
   return (
     <PageShell>
@@ -89,6 +105,23 @@ export default function PeoplePage() {
             </div>
           </Field>
         </div>
+        {dashboardFilter && dashboardFilter !== "todas" ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-md bg-sage px-3 py-1.5 text-sm font-semibold text-moss">
+              Filtro: {filterLabels[dashboardFilter]}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setDashboardFilter("");
+                window.history.replaceState({}, "", "/pessoas");
+              }}
+              className="text-sm font-semibold text-ink/60 hover:text-moss"
+            >
+              Limpar filtro
+            </button>
+          </div>
+        ) : null}
         <p className="mt-2 text-sm text-ink/60">{filteredPeople.length} de {people.length} pessoas encontradas</p>
       </Card>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

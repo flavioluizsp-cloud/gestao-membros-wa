@@ -124,33 +124,35 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      <Link href="/pessoas" className="block">
-        <Card className="hover:bg-sage/40">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-ink">Pessoas</h3>
-              <p className="mt-1 text-sm text-ink/60">Visao geral dos cadastros da igreja.</p>
-            </div>
-            <Users className="h-5 w-5 text-moss" />
+      <Card>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-ink">Pessoas</h3>
+            <p className="mt-1 text-sm text-ink/60">Visao geral dos cadastros da igreja.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[
-              ["Pessoas cadastradas", approvedPeople],
-              ["Membros", members],
-              ["Frequentadores", regularAttendees],
-              ["Total geral", people.length]
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-md border border-line bg-white px-3 py-3">
-                <p className="text-xs font-medium text-ink/60">{label}</p>
-                <p className="mt-2 text-2xl font-bold text-ink">{value}</p>
-              </div>
-            ))}
-          </div>
-          <span className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-line px-3 py-2 text-sm font-semibold text-moss">
-            Abrir Pessoas
-          </span>
-        </Card>
-      </Link>
+          <Users className="h-5 w-5 text-moss" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            ["Pessoas cadastradas", approvedPeople, "cadastradas"],
+            ["Membros", members, "membros"],
+            ["Frequentadores", regularAttendees, "frequentadores"],
+            ["Total geral", people.length, "todas"]
+          ].map(([label, value, filter]) => (
+            <Link
+              key={label}
+              href={`/pessoas?filtro=${filter}`}
+              className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage"
+            >
+              <p className="text-xs font-medium text-ink/60">{label}</p>
+              <p className="mt-2 text-2xl font-bold text-ink">{value}</p>
+            </Link>
+          ))}
+        </div>
+        <Link href="/pessoas" className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-line px-3 py-2 text-sm font-semibold text-moss hover:bg-sage">
+          Abrir Pessoas
+        </Link>
+      </Card>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {overviewCards.map((card) => (
