@@ -24,7 +24,6 @@ const emptyForm = {
   birth_month: null as number | null,
   hide_birth_year: false,
   gender: "",
-  gender: "",
   birth_city: "",
   marital_status: "" as MaritalStatus,
   family_members: [] as FamilyMember[],
