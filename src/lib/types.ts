@@ -13,6 +13,7 @@ export type FamilyMember = {
   name: string;
   relationship: string;
   birth_date: string;
+  linked_person_id?: string | null;
 };
 
 export type Person = {

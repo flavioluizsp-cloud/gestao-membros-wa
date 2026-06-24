@@ -51,9 +51,9 @@ const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
   { value: "juntos_sem_casar", label: "Juntos sem casar" }
 ];
 
-const relationshipOptions = ["Conjuge", "Filho(a)", "Pai", "Mae", "Irmao(a)", "Outro"];
+const relationshipOptions = ["Conjuge", "Filho(a)", "Pais", "Sobrinho(a)", "Outro"];
 
-const emptyMember: FamilyMember = { name: "", relationship: "Filho(a)", birth_date: "" };
+const emptyMember: FamilyMember = { name: "", relationship: "Conjuge", birth_date: "", linked_person_id: null };
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -154,7 +154,8 @@ export default function PersonProfilePage({ params }: PageProps) {
         family_members: (person.family_members ?? []).map((member) => ({
           name: member.name ?? "",
           relationship: member.relationship ?? "",
-          birth_date: member.birth_date || (member as FamilyMember & { birth_year?: string }).birth_year || ""
+          birth_date: member.birth_date || (member as FamilyMember & { birth_year?: string }).birth_year || "",
+          linked_person_id: member.linked_person_id ?? null
         })),
         status: person.status,
         is_baptized: Boolean(person.is_baptized),
@@ -297,7 +298,13 @@ export default function PersonProfilePage({ params }: PageProps) {
                 {form.family_members.map((member, index) => (
                   <div key={index} className="flex items-center justify-between rounded-md border border-line bg-white px-3 py-2.5">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-ink">{member.name}</p>
+                      {member.linked_person_id ? (
+                        <Link href={`/pessoas/${member.linked_person_id}`} className="text-sm font-semibold text-moss hover:underline">
+                          {member.name}
+                        </Link>
+                      ) : (
+                        <p className="text-sm font-semibold text-ink">{member.name}</p>
+                      )}
                       <p className="text-xs text-ink/60">
                         {member.relationship}{member.birth_date ? ` · ${formatDateBR(member.birth_date)}` : ""}
                       </p>
@@ -317,14 +324,37 @@ export default function PersonProfilePage({ params }: PageProps) {
             {/* Formulário inline de novo familiar */}
             {showFamilyForm ? (
               <div className="mt-3 rounded-md border border-line bg-sage p-3">
-                <div className="grid gap-3 md:grid-cols-[1fr_170px_160px]">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Selecionar pessoa cadastrada">
+                    <select
+                      className={inputClass}
+                      value={newMember.linked_person_id ?? ""}
+                      onChange={(e) => {
+                        const selected = people.find((person) => person.id === e.target.value);
+                        setNewMember({
+                          ...newMember,
+                          linked_person_id: selected?.id ?? null,
+                          name: selected?.name ?? "",
+                          birth_date: selected?.birth_date ?? (
+                            selected?.birth_day && selected?.birth_month
+                              ? `${String(selected.birth_day).padStart(2, "0")}/${String(selected.birth_month).padStart(2, "0")}`
+                              : ""
+                          )
+                        });
+                      }}
+                    >
+                      <option value="">Digitar nome manualmente</option>
+                      {people.filter((person) => person.id !== id).map((person) => (
+                        <option key={person.id} value={person.id}>{person.name}</option>
+                      ))}
+                    </select>
+                  </Field>
                   <Field label="Nome">
                     <input
                       className={inputClass}
                       value={newMember.name}
-                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value, linked_person_id: null })}
                       placeholder="Nome do familiar"
-                      autoFocus
                     />
                   </Field>
                   <Field label="Parentesco">
@@ -333,7 +363,7 @@ export default function PersonProfilePage({ params }: PageProps) {
                     </select>
                   </Field>
                   <Field label="Data nascimento">
-                    <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: maskDate(e.target.value) })} />
+                    <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm ou dd/mm/aaaa" value={newMember.birth_date ?? ""} onChange={(e) => setNewMember({ ...newMember, birth_date: maskDate(e.target.value) })} />
                   </Field>
                 </div>
                 <div className="mt-3 flex gap-2">

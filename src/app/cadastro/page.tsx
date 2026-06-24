@@ -17,8 +17,8 @@ const maritalStatusOptions: { value: MaritalStatus; label: string }[] = [
   { value: "juntos_sem_casar", label: "Juntos sem casar" }
 ];
 
-const relationshipOptions = ["Conjuge", "Filho(a)", "Pai", "Mae", "Irmao(a)", "Outro"];
-const emptyMember: FamilyMember = { name: "", relationship: "Filho(a)", birth_date: "" };
+const relationshipOptions = ["Conjuge", "Filho(a)", "Pais", "Sobrinho(a)", "Outro"];
+const emptyMember: FamilyMember = { name: "", relationship: "Conjuge", birth_date: "", linked_person_id: null };
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((i) => i !== value) : [...values, value];
