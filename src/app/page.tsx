@@ -317,25 +317,26 @@ function DemographicsCard({ people }: { people: Person[] }) {
     const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return maleNames.includes(first) ? "M" : "F";
   };
-  const males = people.filter((p) => guessGender(p.name) === "M").length;
-  const females = people.filter((p) => guessGender(p.name) === "F").length;
+  const demoScope = people.filter((p) => p.status === "membro" || p.status === "membro_dependente" || p.status === "frequentador");
+  const males = demoScope.filter((p) => guessGender(p.name) === "M").length;
+  const females = demoScope.filter((p) => guessGender(p.name) === "F").length;
   const getAge = (p: Person) => {
     const d = p.birth_date ? new Date(p.birth_date) : null;
     if (!d) return null;
     return new Date().getFullYear() - d.getFullYear();
   };
-  const children = people.filter((p) => { const a = getAge(p); return a !== null && a <= 12; }).length;
-  const youth = people.filter((p) => { const a = getAge(p); return a !== null && a >= 13 && a <= 25; }).length;
-  const adults = people.filter((p) => { const a = getAge(p); return a !== null && a >= 26 && a <= 59; }).length;
-  const seniors = people.filter((p) => { const a = getAge(p); return a !== null && a >= 60; }).length;
-  const noAge = people.filter((p) => getAge(p) === null).length;
-  const married = people.filter((p) => p.marital_status === "casado").length;
-  const single = people.filter((p) => p.marital_status === "solteiro").length;
-  const otherMarital = people.filter((p) => p.marital_status && p.marital_status !== "casado" && p.marital_status !== "solteiro").length;
-  const baptized = people.filter((p) => p.is_baptized).length;
-  const notBaptized = people.filter((p) => !p.is_baptized).length;
-  const withGF = people.filter((p) => p.family_group).length;
-  const withoutGF = people.filter((p) => !p.family_group).length;
+  const children = demoScope.filter((p) => { const a = getAge(p); return a !== null && a <= 12; }).length;
+  const youth = demoScope.filter((p) => { const a = getAge(p); return a !== null && a >= 13 && a <= 25; }).length;
+  const adults = demoScope.filter((p) => { const a = getAge(p); return a !== null && a >= 26 && a <= 59; }).length;
+  const seniors = demoScope.filter((p) => { const a = getAge(p); return a !== null && a >= 60; }).length;
+  const noAge = demoScope.filter((p) => getAge(p) === null).length;
+  const married = demoScope.filter((p) => p.marital_status === "casado").length;
+  const single = demoScope.filter((p) => p.marital_status === "solteiro").length;
+  const otherMarital = demoScope.filter((p) => p.marital_status && p.marital_status !== "casado" && p.marital_status !== "solteiro").length;
+  const baptized = demoScope.filter((p) => p.is_baptized).length;
+  const notBaptized = demoScope.filter((p) => !p.is_baptized).length;
+  const withGF = demoScope.filter((p) => p.family_group).length;
+  const withoutGF = demoScope.filter((p) => !p.family_group).length;
 
   type StatItem = { label: string; value: number; href?: string };
   const Section = ({ title, items }: { title: string; items: StatItem[] }) => (
