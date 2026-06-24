@@ -13,9 +13,18 @@ import type { AccessContext, Person } from "@/lib/types";
 
 function normalizeName(value: string) {
   return value
-    .normalize("NFD")
+    .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+    .replace(/[áàâãä]/gi, "a")
+    .replace(/[éèêë]/gi, "e")
+    .replace(/[íìîï]/gi, "i")
+    .replace(/[óòôõö]/gi, "o")
+    .replace(/[úùûü]/gi, "u")
+    .replace(/ç/gi, "c")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("pt-BR");
 }
 
 export default function PeoplePage() {
@@ -40,12 +49,7 @@ export default function PeoplePage() {
   const filteredPeople = useMemo(() => {
     const matches = normalizedSearch
       ? people.filter((person) => {
-          const haystack = [person.name, person.preferred_name]
-            .filter(Boolean)
-            .join(" ")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase();
+          const haystack = normalizeName([person.name, person.preferred_name].filter(Boolean).join(" "));
           return haystack.includes(normalizedSearch);
         })
       : people;
