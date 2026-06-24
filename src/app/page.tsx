@@ -75,10 +75,13 @@ export default function DashboardPage() {
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
   const peopleWithoutFamilyGroup = people.length - peopleInFamilyGroups;
   const approvedPeople = people.filter((person) => !person.pending_approval).length;
-  const members = people.filter((person) => person.status === "membro").length;
-  const dependentMembers = people.filter((person) => person.status === "membro_dependente").length;
-  const regularAttendees = people.filter((person) => person.status === "frequentador").length;
-  const totalCongregants = members + dependentMembers + regularAttendees;
+  const countVisitante = people.filter((person) => person.status === "visitante").length;
+  const countFrequentador = people.filter((person) => person.status === "frequentador").length;
+  const countMembroDependente = people.filter((person) => person.status === "membro_dependente").length;
+  const countMembro = people.filter((person) => person.status === "membro").length;
+  const countAfastado = people.filter((person) => person.status === "afastado").length;
+  const countTransferido = people.filter((person) => person.status === "transferido").length;
+  const totalCongregants = countMembro + countMembroDependente + countFrequentador;
 
   const overviewCards: OverviewCard[] = [
     {
@@ -134,27 +137,36 @@ export default function DashboardPage() {
           </div>
           <Users className="h-5 w-5 text-moss" />
         </div>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Link href="/pessoas?filtro=cadastradas" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
-            <p className="text-xs font-medium text-ink/60">Total cadastros</p>
-            <p className="mt-2 text-2xl font-bold text-ink">{approvedPeople}</p>
-            <p className="mt-1 text-xs text-ink/40">info gerencial</p>
-          </Link>
-          <Link href="/pessoas?filtro=membros" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
-            <p className="text-xs font-medium text-ink/60">Membros</p>
-            <p className="mt-2 text-2xl font-bold text-ink">{members}</p>
-            <p className="mt-1 text-xs text-ink/40">votam em assembleia</p>
-          </Link>
-          <Link href="/pessoas?filtro=frequentadores" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
-            <p className="text-xs font-medium text-ink/60">Frequentadores</p>
-            <p className="mt-2 text-2xl font-bold text-ink">{regularAttendees}</p>
-            <p className="mt-1 text-xs text-ink/40">frequentam o culto</p>
-          </Link>
-          <Link href="/pessoas" className="rounded-md border border-line bg-white px-3 py-3 hover:border-moss hover:bg-sage">
-            <p className="text-xs font-medium text-ink/60">Presenca total</p>
-            <p className="mt-2 text-2xl font-bold text-ink">{totalCongregants}</p>
-            <p className="mt-1 text-xs text-ink/40">membros + dependentes + freq.</p>
-          </Link>
+        <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {[
+              ["Visitante", countVisitante, "visitante"],
+              ["Frequentador", countFrequentador, "frequentadores"],
+              ["Mb. dependente", countMembroDependente, "membro_dependente"],
+              ["Membro", countMembro, "membros"],
+              ["Afastado", countAfastado, "afastado"],
+              ["Transferido", countTransferido, "transferido"],
+            ].map(([label, value, filter]) => (
+              <Link key={String(label)} href={`/pessoas?filtro=${filter}`} className="rounded-md border border-line bg-white px-2 py-2.5 text-center hover:border-moss hover:bg-sage">
+                <p className="text-xs text-ink/60 leading-tight">{label}</p>
+                <p className="mt-1.5 text-xl font-bold text-ink">{value}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-md border border-line bg-sage px-3 py-2.5 text-center">
+              <p className="text-xs text-ink/60">Total cadastros</p>
+              <p className="mt-1 text-lg font-bold text-ink">{approvedPeople}</p>
+            </div>
+            <div className="rounded-md border border-moss bg-sage px-3 py-2.5 text-center">
+              <p className="text-xs text-ink/60">Votam em assembleia</p>
+              <p className="mt-1 text-lg font-bold text-moss">{countMembro}</p>
+            </div>
+            <div className="rounded-md border border-line bg-sage px-3 py-2.5 text-center">
+              <p className="text-xs text-ink/60">Presenca total</p>
+              <p className="mt-1 text-lg font-bold text-ink">{totalCongregants}</p>
+            </div>
+          </div>
         </div>
         <Link href="/pessoas" className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-line px-3 py-2 text-sm font-semibold text-moss hover:bg-sage">
           Abrir Pessoas
