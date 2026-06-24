@@ -171,12 +171,6 @@ export default function DashboardPage() {
         </Link>
       </Card>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-2">
-        {overviewCards.map((card) => (
-          <OverviewSectionCard key={card.href} card={card} />
-        ))}
-      </div>
-
       <BirthdaysCard birthdays={birthdaysVisible} hiddenBirthdays={birthdaysHidden} />
     </PageShell>
   );
