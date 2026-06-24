@@ -75,6 +75,7 @@ export default function CadastroPage() {
     password: "",
     confirm_password: "",
     birth_date: "",
+    gender: "",
     birth_city: "",
     marital_status: "" as MaritalStatus,
     family_members: [] as FamilyMember[],
@@ -140,6 +141,7 @@ export default function CadastroPage() {
       phone: form.phone,
       email: form.email,
       birth_date: normalizeDate(form.birth_date),
+      gender: form.gender || null,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
       family_members: form.family_members.filter((m) => m.name.trim()),
@@ -204,6 +206,7 @@ export default function CadastroPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nome completo"><input required className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
               <Field label="Como e conhecido"><input className={inputClass} value={form.preferred_name} onChange={(e) => setForm({ ...form, preferred_name: e.target.value })} /></Field>
+              <Field label="Genero"><select className={inputClass} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}><option value="">Nao informado</option><option value="M">Masculino</option><option value="F">Feminino</option></select></Field>
               <Field label="Numero WhatsApp"><input required className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
               <Field label="E-mail"><input required className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
               <Field label="Senha de acesso"><input required className={inputClass} type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>

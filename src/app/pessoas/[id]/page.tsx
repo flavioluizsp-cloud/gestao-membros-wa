@@ -23,6 +23,7 @@ const emptyForm = {
   birth_day: null as number | null,
   birth_month: null as number | null,
   hide_birth_year: false,
+  gender: "",
   birth_city: "",
   marital_status: "" as MaritalStatus,
   family_members: [] as FamilyMember[],
@@ -149,6 +150,7 @@ export default function PersonProfilePage({ params }: PageProps) {
         birth_day: person.birth_day,
         birth_month: person.birth_month,
         hide_birth_year: Boolean(person.hide_birth_year),
+        gender: person.gender ?? "",
         birth_city: person.birth_city ?? "",
         marital_status: person.marital_status ?? "",
         family_members: (person.family_members ?? []).map((member) => ({
@@ -196,6 +198,7 @@ export default function PersonProfilePage({ params }: PageProps) {
       email: form.email || null,
       ...parsedBirthDate,
       hide_birth_year: form.hide_birth_year,
+      gender: form.gender || null,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
       family_members: normalizeFamilyMembers(form.family_members).map((member) => ({ ...member, birth_date: normalizeDate(member.birth_date) ?? "" })),

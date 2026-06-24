@@ -59,13 +59,7 @@ export default function DashboardPage() {
   }, [router]);
 
   if (loading) {
-    const maleNames = ["jose","joao","pedro","paulo","marcos","lucas","mateus","andre","felipe","carlos","antonio","francisco","raimundo","manoel","joaquim","jorge","roberto","fernando","marcelo","rafael","daniel","gabriel","samuel","elias","davi","isaias","jeremias","ezequiel","amos","oseas","miqueas","naum","habacuque","sofonias","ageu","zacarias","malaquias","joel","obadias","jonas","rufus","tiago","simao","bartolomeu","natanael","timoteo","tito","filemom","estevao","filipe","nicodemos","lazaro","zaqueu","cornelio","barnabe","silas","clemente","onesifo","aristarco","gaio","epafras","trofimo","tiquico","crescente","demas","hermas","hermes","patrobas","filolo","olimpas","nereo","junias","andronicus","herodion","sosipater","lucio","jasao","sosipater","tertio","erasto","quarto","fortunato","acaico","estafanas"];
-  const guessGender = (name: string) => {
-    const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return maleNames.includes(first) ? "M" : "F";
-  };
-  const males = people.filter((p) => guessGender(p.name) === "M").length;
-  const females = people.filter((p) => guessGender(p.name) === "F").length;
+    
   const getAge = (p: Person) => {
     const d = p.birth_date ? new Date(p.birth_date) : null;
     if (!d) return null;
@@ -312,14 +306,10 @@ function findSegmentLeader(departmentName: string, members: Person[], department
 }
 
 function DemographicsCard({ people }: { people: Person[] }) {
-  const maleNames = ["jose","joao","pedro","paulo","marcos","lucas","mateus","andre","felipe","carlos","antonio","francisco","raimundo","manoel","joaquim","jorge","roberto","fernando","marcelo","rafael","daniel","gabriel","samuel","elias","davi","isaias","jeremias","ezequiel","amos","oseas","miqueas","naum","habacuque","sofonias","ageu","zacarias","malaquias","joel","obadias","jonas","rufus","tiago","simao","bartolomeu","natanael","timoteo","tito","filemom","estevao","filipe","nicodemos","lazaro","zaqueu","cornelio","barnabe","silas","clemente","onesifo","aristarco","gaio","epafras","trofimo","tiquico","crescente","demas","hermas","hermes","patrobas","filolo","olimpas","nereo","junias","andronicus","herodion","sosipater","lucio","jasao","sosipater","tertio","erasto","quarto","fortunato","acaico","estafanas"];
-  const guessGender = (name: string) => {
-    const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return maleNames.includes(first) ? "M" : "F";
-  };
   const demoScope = people.filter((p) => p.status === "membro" || p.status === "membro_dependente" || p.status === "frequentador");
-  const males = demoScope.filter((p) => guessGender(p.name) === "M").length;
-  const females = demoScope.filter((p) => guessGender(p.name) === "F").length;
+  const males = demoScope.filter((p) => p.gender === "M").length;
+  const females = demoScope.filter((p) => p.gender === "F").length;
+  const noGender = demoScope.filter((p) => !p.gender).length;
   const getAge = (p: Person) => {
     const d = p.birth_date ? new Date(p.birth_date) : null;
     if (!d) return null;
@@ -364,9 +354,10 @@ function DemographicsCard({ people }: { people: Person[] }) {
     <Card className="mt-6">
       <h3 className="mb-5 font-semibold text-ink">Analise demografica</h3>
       <div className="space-y-5">
-        <Section title="Genero (estimado pelo nome)" items={[
-          { label: "Homens", value: males },
-          { label: "Mulheres", value: females },
+        <Section title="Genero" items={[
+          { label: "Masculino", value: males },
+          { label: "Feminino", value: females },
+          { label: "Nao informado", value: noGender },
         ]} />
         <Section title="Faixa etaria" items={[
           { label: "Criancas 0-12", value: children, href: "/pessoas?filtro=criancas" },
