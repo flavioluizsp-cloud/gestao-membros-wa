@@ -25,6 +25,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     ["Relatorios", "/relatorios"],
     ["Permissoes", "/permissoes"],
     ["Aprovacoes", "/admin/aprovacoes"],
+    ["Revisao de genero", "/admin/revisao-genero"],
     ["Privacidade", "/privacidade"]
   ];
   const leaderNav = [
