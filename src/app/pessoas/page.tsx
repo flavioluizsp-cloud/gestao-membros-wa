@@ -36,7 +36,14 @@ export default function PeoplePage() {
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "recent" | "oldest">("name_asc");
 
   useEffect(() => {
-    setDashboardFilter(new URLSearchParams(window.location.search).get("filtro") ?? "");
+    const params = new URLSearchParams(window.location.search);
+    const filtro = params.get("filtro") ?? "";
+    const demograficos = ["criancas","jovens","adultos","idosos","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"];
+    if (demograficos.includes(filtro)) {
+      setMissingFilter(filtro);
+    } else {
+      setDashboardFilter(filtro);
+    }
 
     async function loadPeople() {
       if (!supabase || !membrosDb) return;
