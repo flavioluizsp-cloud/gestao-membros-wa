@@ -27,6 +27,7 @@ export type Person = {
   birth_month: number | null;
   life_stage: "crianca" | "adolescente" | null;
   hide_birth_year: boolean;
+  gender: string | null;
   birth_city: string | null;
   marital_status: MaritalStatus | null;
   family_members: FamilyMember[] | null;
