@@ -337,29 +337,56 @@ function DemographicsCard({ people }: { people: Person[] }) {
   const withGF = people.filter((p) => p.family_group).length;
   const withoutGF = people.filter((p) => !p.family_group).length;
 
-  const Section = ({ title, items }: { title: string; items: [string, number][] }) => (
+  type StatItem = { label: string; value: number; href?: string };
+  const Section = ({ title, items }: { title: string; items: StatItem[] }) => (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">{title}</p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {items.map(([label, value]) => (
-          <div key={label} className="rounded-md border border-line bg-white px-3 py-2.5 text-center">
-            <p className="text-xs text-ink/60">{label}</p>
-            <p className="mt-1 text-lg font-bold text-ink">{value}</p>
-          </div>
-        ))}
+      <p className="mb-2 text-sm font-semibold text-ink border-b border-line pb-1">{title}</p>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+        {items.map(({ label, value, href }) => {
+          const content = (
+            <>
+              <p className="text-xs text-ink/60 leading-tight">{label}</p>
+              <p className="mt-1.5 text-xl font-bold text-ink">{value}</p>
+            </>
+          );
+          return href ? (
+            <a key={label} href={href} className="rounded-md border border-line bg-white px-2 py-3 text-center hover:border-moss hover:bg-sage">{content}</a>
+          ) : (
+            <div key={label} className="rounded-md border border-line bg-white px-2 py-3 text-center">{content}</div>
+          );
+        })}
       </div>
     </div>
   );
 
   return (
     <Card className="mt-6">
-      <h3 className="mb-4 font-semibold text-ink">Analise demografica</h3>
+      <h3 className="mb-5 font-semibold text-ink">Analise demografica</h3>
       <div className="space-y-5">
-        <Section title="Genero (estimado pelo nome)" items={[["Homens", males], ["Mulheres", females]]} />
-        <Section title="Faixa etaria" items={[["Criancas (0-12)", children], ["Jovens (13-25)", youth], ["Adultos (26-59)", adults], ["Idosos (60+)", seniors]]} />
-        <Section title="Estado civil" items={[["Casados", married], ["Solteiros", single], ["Outros", otherMarital]]} />
-        <Section title="Batismo" items={[["Batizados", baptized], ["Nao batizados", notBaptized]]} />
-        <Section title="Grupos Familiares" items={[["Com GF", withGF], ["Sem GF", withoutGF]]} />
+        <Section title="Genero (estimado pelo nome)" items={[
+          { label: "Homens", value: males },
+          { label: "Mulheres", value: females },
+        ]} />
+        <Section title="Faixa etaria" items={[
+          { label: "Criancas 0-12", value: children, href: "/pessoas?filtro=criancas" },
+          { label: "Jovens 13-25", value: youth, href: "/pessoas?filtro=jovens" },
+          { label: "Adultos 26-59", value: adults },
+          { label: "Idosos 60+", value: seniors },
+          { label: "Sem idade", value: noAge, href: "/pessoas?filtro=sem_aniversario" },
+        ]} />
+        <Section title="Estado civil" items={[
+          { label: "Casados", value: married },
+          { label: "Solteiros", value: single },
+          { label: "Outros", value: otherMarital },
+        ]} />
+        <Section title="Batismo" items={[
+          { label: "Batizados", value: baptized },
+          { label: "Nao batizados", value: notBaptized, href: "/pessoas?filtro=sem_batismo" },
+        ]} />
+        <Section title="Grupos Familiares" items={[
+          { label: "Com GF", value: withGF },
+          { label: "Sem GF", value: withoutGF, href: "/pessoas?filtro=sem_gf" },
+        ]} />
       </div>
     </Card>
   );
