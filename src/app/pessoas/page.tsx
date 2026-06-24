@@ -63,7 +63,7 @@ export default function PeoplePage() {
     });
     const pendingMatches = statusMatches.filter((person) => {
       if (missingFilter === "sem_gf") return !person.family_group;
-      if (missingFilter === "sem_aniversario") return !person.birth_date && (!person.birth_day || !person.birth_month);
+      if (missingFilter === "sem_aniversario") return !person.birth_date;
       if (missingFilter === "sem_email") return !person.email?.trim();
       if (missingFilter === "sem_telefone") return !person.phone?.trim();
       if (missingFilter === "sem_familia") return (person.family_members ?? []).length === 0;

@@ -311,9 +311,14 @@ function DemographicsCard({ people }: { people: Person[] }) {
   const females = demoScope.filter((p) => p.gender === "F").length;
   const noGender = demoScope.filter((p) => !p.gender).length;
   const getAge = (p: Person) => {
-    const d = p.birth_date ? new Date(p.birth_date) : null;
-    if (!d) return null;
-    return new Date().getFullYear() - d.getFullYear();
+    if (!p.birth_date) return null;
+    const d = new Date(p.birth_date);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - d.getFullYear();
+    const m = today.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+    return age;
   };
   const children = demoScope.filter((p) => { const a = getAge(p); return a !== null && a <= 12; }).length;
   const youth = demoScope.filter((p) => { const a = getAge(p); return a !== null && a >= 13 && a <= 25; }).length;
@@ -364,16 +369,17 @@ function DemographicsCard({ people }: { people: Person[] }) {
           { label: "Jovens 13-25", value: youth, href: "/pessoas?filtro=jovens" },
           { label: "Adultos 26-59", value: adults, href: "/pessoas?filtro=adultos" },
           { label: "Idosos 60+", value: seniors, href: "/pessoas?filtro=idosos" },
-          { label: "Sem idade", value: noAge, href: "/pessoas?filtro=sem_aniversario" },
+          { label: "Nao informado", value: noAge, href: "/pessoas?filtro=sem_aniversario" },
         ]} />
         <Section title="Estado civil" items={[
           { label: "Casados", value: married, href: "/pessoas?filtro=casado" },
           { label: "Solteiros", value: single, href: "/pessoas?filtro=solteiro" },
           { label: "Outros", value: otherMarital },
+          { label: "Nao informado", value: demoScope.filter((p) => !p.marital_status).length, href: "/pessoas?filtro=sem_estado_civil" },
         ]} />
         <Section title="Batismo" items={[
-          { label: "Batizados", value: baptized, href: "/pessoas?filtro=batizados" },
-          { label: "Nao batizados", value: notBaptized, href: "/pessoas?filtro=sem_batismo" },
+          { label: "Sim", value: baptized, href: "/pessoas?filtro=batizados" },
+          { label: "Nao", value: notBaptized, href: "/pessoas?filtro=sem_batismo" },
         ]} />
         <Section title="Grupos Familiares" items={[
           { label: "Com GF", value: withGF, href: "/pessoas?filtro=com_gf" },
