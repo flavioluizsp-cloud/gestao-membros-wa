@@ -176,7 +176,7 @@ export default function DashboardPage() {
   );
 }
 
-function BirthdaysCard({ birthdays }: { birthdays: Person[] }) {
+function BirthdaysCard({ birthdays, hiddenBirthdays = [] }: { birthdays: Person[]; hiddenBirthdays?: Person[] }) {
   return (
     <Card className="mt-6">
       <div className="mb-3 flex items-center justify-between">
