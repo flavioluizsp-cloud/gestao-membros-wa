@@ -77,6 +77,10 @@ export default function PeoplePage() {
       if (missingFilter === "sem_departamento") return (person.departments ?? []).length === 0;
       if (missingFilter === "sem_cidade") return !person.birth_city?.trim();
       if (missingFilter === "sem_batismo") return !person.is_baptized && !person.baptism_date && !person.baptism_church;
+      const demoStatuses = ["membro", "membro_dependente", "frequentador"];
+      if (["criancas","jovens","adultos","idosos","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"].includes(missingFilter)) {
+        if (!demoStatuses.includes(person.status)) return false;
+      }
       const getAge = (p: typeof person) => {
         if (!p.birth_date) return null;
         const d = new Date(p.birth_date);
