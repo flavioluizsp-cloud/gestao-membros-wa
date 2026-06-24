@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button, Card, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
+import { parseBirthDateInput } from "@/lib/date";
 import { administrativeRoleOptions, departmentOptions, departmentRoleOptions, ecclesiasticalRoleOptions, familyGroupOptions, personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import type { AccessContext, FamilyMember, MaritalStatus, Person, PersonStatus } from "@/lib/types";
@@ -19,6 +20,8 @@ const emptyForm = {
   phone: "",
   email: "",
   birth_date: "",
+  birth_day: null as number | null,
+  birth_month: null as number | null,
   hide_birth_year: false,
   birth_city: "",
   marital_status: "" as MaritalStatus,
@@ -142,7 +145,9 @@ export default function PersonProfilePage({ params }: PageProps) {
         preferred_name: person.preferred_name ?? "",
         phone: person.phone,
         email: person.email ?? "",
-        birth_date: person.birth_date ?? "",
+        birth_date: person.birth_date ?? (person.birth_day && person.birth_month ? `${String(person.birth_day).padStart(2, "0")}/${String(person.birth_month).padStart(2, "0")}` : ""),
+        birth_day: person.birth_day,
+        birth_month: person.birth_month,
         hide_birth_year: Boolean(person.hide_birth_year),
         birth_city: person.birth_city ?? "",
         marital_status: person.marital_status ?? "",
@@ -182,12 +187,13 @@ export default function PersonProfilePage({ params }: PageProps) {
   async function savePerson(event: React.FormEvent) {
     event.preventDefault();
     if (!membrosDb) return;
+    const parsedBirthDate = parseBirthDateInput(form.birth_date);
     const payload = {
       name: form.name,
       preferred_name: form.preferred_name || null,
       phone: form.phone,
       email: form.email || null,
-      birth_date: normalizeDate(form.birth_date),
+      ...parsedBirthDate,
       hide_birth_year: form.hide_birth_year,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
@@ -266,7 +272,7 @@ export default function PersonProfilePage({ params }: PageProps) {
             <div className="col-span-2 flex items-end gap-3">
               <label className="block flex-1">
                 <span className="mb-1 block text-sm font-medium text-ink">Data de nascimento</span>
-                <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} />
+                <input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm ou dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} />
               </label>
               <label className="flex h-[42px] shrink-0 items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input type="checkbox" checked={form.hide_birth_year} onChange={(e) => setForm({ ...form, hide_birth_year: e.target.checked })} />

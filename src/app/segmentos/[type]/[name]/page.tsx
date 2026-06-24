@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Badge, Button, Card, PageHeader, PageShell } from "@/components/ui";
-import { formatDate } from "@/lib/date";
+import { formatBirthDate } from "@/lib/date";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getAccessContext } from "@/lib/access";
@@ -164,7 +164,7 @@ export default function SegmentPage({ params }: PageProps) {
                   <p className="font-semibold">{person.name}</p>
                   {isLeader ? <Badge>{person.status}</Badge> : null}
                 </div>
-                <p className="mt-1 text-sm text-ink/60">{person.phone} - nasc. {formatDate(person.birth_date)}</p>
+                <p className="mt-1 text-sm text-ink/60">{person.phone} - nasc. {formatBirthDate(person.birth_date, person.birth_day, person.birth_month, person.hide_birth_year)}</p>
                 <p className="mt-1 text-sm text-ink/60">GF: {person.family_group ?? "Sem grupo"} - Atribuicao: {person.assigned_leader ?? "-"}</p>
               </div>
               {isLeader ? (

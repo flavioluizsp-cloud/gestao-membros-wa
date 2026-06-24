@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, Field, inputClass } from "@/components/ui";
 import { PrivacyConsentCheckbox } from "@/components/privacy-consent";
+import { parseBirthDateInput } from "@/lib/date";
 import { departmentOptions, familyGroupOptions } from "@/lib/labels";
 import { privacyConsentVersion } from "@/lib/privacy";
 import { membrosDb, supabase } from "@/lib/supabase";
@@ -134,12 +135,13 @@ export default function CadastroPage() {
       return;
     }
 
+    const parsedBirthDate = parseBirthDateInput(form.birth_date);
     const payload = {
       name: form.name,
       preferred_name: form.preferred_name || null,
       phone: form.phone,
       email: form.email,
-      birth_date: normalizeDate(form.birth_date),
+      ...parsedBirthDate,
       birth_city: form.birth_city || null,
       marital_status: form.marital_status || null,
       family_members: form.family_members.filter((m) => m.name.trim()),
@@ -208,7 +210,7 @@ export default function CadastroPage() {
               <Field label="E-mail"><input required className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
               <Field label="Senha de acesso"><input required className={inputClass} type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
               <Field label="Confirmar senha"><input required className={inputClass} type="password" minLength={6} value={form.confirm_password} onChange={(e) => setForm({ ...form, confirm_password: e.target.value })} /></Field>
-              <Field label="Data de nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} /></Field>
+              <Field label="Data de nascimento"><input className={inputClass} type="text" inputMode="numeric" placeholder="dd/mm ou dd/mm/aaaa" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} /></Field>
               <Field label="Cidade natal"><input className={inputClass} value={form.birth_city} onChange={(e) => setForm({ ...form, birth_city: e.target.value })} /></Field>
               <div className="sm:col-span-2">
                 <Field label="Situacao conjugal">

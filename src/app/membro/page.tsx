@@ -5,7 +5,7 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Badge, Card, PageShell } from "@/components/ui";
 import { getAccessContext } from "@/lib/access";
-import { formatDate, isBirthdayThisWeek } from "@/lib/date";
+import { formatBirthdayRadar, formatBirthDate, formatDate, isBirthdayThisWeek } from "@/lib/date";
 import { membrosDb } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { AccessContext, Person } from "@/lib/types";
@@ -23,7 +23,7 @@ export default function MembroHomePage() {
       if (ctx.person?.id && membrosDb) {
         const [{ data }, { data: allPeopleData }] = await Promise.all([
           membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
-          membrosDb.from("people").select("id, name, preferred_name, phone, birth_date, departments, family_group")
+          membrosDb.from("people").select("id, name, preferred_name, phone, birth_date, birth_day, birth_month, departments, family_group")
         ]);
         setPerson(data as Person | null);
         setAllPeople((allPeopleData ?? []) as Person[]);
@@ -45,7 +45,7 @@ export default function MembroHomePage() {
   );
 
   const familyGroupLeader = person.family_group_leader;
-  const birthdays = allPeople.filter((item) => isBirthdayThisWeek(item.birth_date));
+  const birthdays = allPeople.filter((item) => isBirthdayThisWeek(item.birth_date, item.birth_day, item.birth_month));
   const leadPastor = getLeadPastor(allPeople);
   const assignedLeader = person.assigned_leader ? findPersonByName(allPeople, person.assigned_leader) : null;
 
@@ -88,10 +88,10 @@ export default function MembroHomePage() {
                 <span className="font-medium text-ink">{person.email}</span>
               </div>
             ) : null}
-            {person.birth_date ? (
+            {person.birth_date || (person.birth_day && person.birth_month) ? (
               <div className="flex justify-between">
                 <span className="text-ink/60">Nascimento</span>
-                <span className="font-medium text-ink">{formatDate(person.birth_date)}</span>
+                <span className="font-medium text-ink">{formatBirthDate(person.birth_date, person.birth_day, person.birth_month, person.hide_birth_year)}</span>
               </div>
             ) : null}
           </div>
@@ -170,7 +170,7 @@ export default function MembroHomePage() {
               <div key={birthdayPerson.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
                 <div>
                   <p className="text-sm font-semibold text-ink">{birthdayPerson.preferred_name || birthdayPerson.name}</p>
-                  <p className="text-xs text-ink/60">{formatBirthdayForMember(birthdayPerson.birth_date)}</p>
+                  <p className="text-xs text-ink/60">{formatBirthdayRadar(birthdayPerson.birth_date, birthdayPerson.birth_day, birthdayPerson.birth_month)}</p>
                 </div>
                 <a
                   href={buildWhatsAppUrl(birthdayPerson.phone, `Feliz aniversario ${birthdayPerson.preferred_name || birthdayPerson.name}! Que Deus te abencoe muito!`)}
@@ -242,18 +242,4 @@ function findPersonByName(people: Person[], name: string) {
 
 function normalizeText(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
-function formatBirthdayForMember(date?: string | null) {
-  if (!date) return "-";
-  const birthday = new Date(date);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const currentBirthday = new Date(now.getFullYear(), birthday.getUTCMonth(), birthday.getUTCDate());
-  if (currentBirthday < today) currentBirthday.setFullYear(now.getFullYear() + 1);
-
-  const day = String(currentBirthday.getDate()).padStart(2, "0");
-  const month = String(currentBirthday.getMonth() + 1).padStart(2, "0");
-  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(currentBirthday);
-  return `${day}/${month} - ${weekday}`;
 }

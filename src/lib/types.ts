@@ -22,6 +22,9 @@ export type Person = {
   phone: string;
   email: string | null;
   birth_date: string | null;
+  birth_day: number | null;
+  birth_month: number | null;
+  life_stage: "crianca" | "adolescente" | null;
   hide_birth_year: boolean;
   birth_city: string | null;
   marital_status: MaritalStatus | null;

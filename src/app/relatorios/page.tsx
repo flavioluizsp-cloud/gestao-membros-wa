@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Badge, Card, PageHeader, PageShell } from "@/components/ui";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
+import { formatBirthDate, isBirthdayThisWeek, isOlderThanDays, formatDate } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
 import type { PastoralTask, Person } from "@/lib/types";
 
@@ -38,7 +38,7 @@ export default function ReportsPage() {
       acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {});
-  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
   const stale = people.filter((person) => isOlderThanDays(person.last_contact_at, 30));
 
   return (
@@ -55,7 +55,7 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <h3 className="mb-3 font-semibold">Aniversariantes da semana</h3>
-          <div className="space-y-2">{birthdays.map((person) => <p key={person.id} className="text-sm">{person.name} · {formatDate(person.birth_date)}</p>)}</div>
+          <div className="space-y-2">{birthdays.map((person) => <p key={person.id} className="text-sm">{person.name} · {formatBirthDate(person.birth_date, person.birth_day, person.birth_month, person.hide_birth_year)}</p>)}</div>
         </Card>
         <Card>
           <h3 className="mb-3 font-semibold">Tarefas pendentes</h3>

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpDown, MessageCircle, Plus } from "lucide-react";
 import { Badge, Card, EmptyState, Field, inputClass, PageHeader, PageShell } from "@/components/ui";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { formatDate } from "@/lib/date";
+import { formatBirthDate } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -134,7 +134,7 @@ export default function PeoplePage() {
                   {access?.isAdminLike || access?.isLeader ? <Badge>{personStatusLabels[person.status]}</Badge> : null}
                 </div>
                 {person.preferred_name ? <p className="mt-1 text-sm text-ink/60">{person.name}</p> : null}
-                <p className="mt-2 text-sm text-ink/65">{person.phone} · nasc. {formatDate(person.birth_date)}</p>
+                <p className="mt-2 text-sm text-ink/65">{person.phone} · nasc. {formatBirthDate(person.birth_date, person.birth_day, person.birth_month, person.hide_birth_year)}</p>
                 <p className="mt-1 text-sm text-ink/65">GF: {person.family_group ?? "Sem grupo"}</p>
                 {[...(person.departments ?? []), ...(person.department_roles ?? [])].length ? (
                   <p className="mt-1 text-sm text-moss">{[...(person.department_roles ?? []), ...(person.departments ?? [])].join(" · ")}</p>

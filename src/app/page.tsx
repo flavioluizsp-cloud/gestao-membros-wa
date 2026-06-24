@@ -6,7 +6,7 @@ import { MessageCircle, Users } from "lucide-react";
 import { Badge, Card, LinkButton, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { membrosDb, supabase } from "@/lib/supabase";
-import { isBirthdayThisWeek } from "@/lib/date";
+import { formatBirthdayRadar, isBirthdayThisWeek } from "@/lib/date";
 import { useRouter } from "next/navigation";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
 import { familyGroupOptions } from "@/lib/labels";
@@ -69,7 +69,7 @@ export default function DashboardPage() {
     );
   }
 
-  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const birthdays = people.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
   const departments = buildDepartmentRows(people, departmentAssignments);
   const familyGroups = buildFamilyGroupRows(people, familyGroupAssignments);
   const peopleInFamilyGroups = people.filter((person) => person.family_group).length;
@@ -177,7 +177,7 @@ function BirthdaysCard({ birthdays }: { birthdays: Person[] }) {
           <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
             <div>
               <p className="text-sm font-semibold text-ink">{person.preferred_name || person.name}</p>
-              <p className="text-xs text-ink/60">{formatBirthdayForDashboard(person.birth_date)}</p>
+              <p className="text-xs text-ink/60">{formatBirthdayRadar(person.birth_date, person.birth_day, person.birth_month)}</p>
             </div>
             <a
               href={buildWhatsAppUrl(person.phone, `Feliz aniversario ${person.preferred_name || person.name}! Que Deus te abencoe muito!`)}
@@ -271,18 +271,4 @@ function findSegmentLeader(departmentName: string, members: Person[], department
   if (leader) return leader.name;
   if (coLeader) return coLeader.name;
   return "Sem lider definido";
-}
-
-function formatBirthdayForDashboard(date?: string | null) {
-  if (!date) return "-";
-  const birthday = new Date(date);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const currentBirthday = new Date(now.getFullYear(), birthday.getUTCMonth(), birthday.getUTCDate());
-  if (currentBirthday < today) currentBirthday.setFullYear(now.getFullYear() + 1);
-
-  const day = String(currentBirthday.getDate()).padStart(2, "0");
-  const month = String(currentBirthday.getMonth() + 1).padStart(2, "0");
-  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(currentBirthday);
-  return `${day}/${month} - ${weekday}`;
 }

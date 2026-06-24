@@ -6,7 +6,7 @@ import { MessageCircle } from "lucide-react";
 import { Badge, Card, PageHeader, PageShell } from "@/components/ui";
 import { SignupLinksCard } from "@/components/signup-links-card";
 import { filterPeopleByAccess, getAccessContext } from "@/lib/access";
-import { formatDate, isBirthdayThisWeek } from "@/lib/date";
+import { formatBirthdayRadar, formatDate, isBirthdayThisWeek } from "@/lib/date";
 import { personStatusLabels } from "@/lib/labels";
 import { membrosDb, supabase } from "@/lib/supabase";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -56,7 +56,7 @@ export default function LiderHomePage() {
 
   if (loading) return <PageShell><p className="text-sm text-ink/60">Carregando...</p></PageShell>;
 
-  const birthdays = allPeople.filter((person) => isBirthdayThisWeek(person.birth_date));
+  const birthdays = allPeople.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
   const leaderName = access?.person?.preferred_name || access?.person?.name || "Lider";
   const familyGroup = access?.person?.family_group || "Sem grupo familiar cadastrado";
   const leadershipSegments = buildLeadershipSegments(access, people, allPeople, departmentAssignments);
@@ -167,7 +167,7 @@ export default function LiderHomePage() {
                 <div key={person.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5">
                   <div>
                     <p className="text-sm font-semibold text-ink">{person.preferred_name || person.name}</p>
-                    <p className="text-xs text-ink/60">{formatBirthdayForLeader(person.birth_date)}</p>
+                    <p className="text-xs text-ink/60">{formatBirthdayRadar(person.birth_date, person.birth_day, person.birth_month)}</p>
                   </div>
                   <a
                     href={buildWhatsAppUrl(person.phone, `Feliz aniversario ${person.preferred_name || person.name}! Que Deus te abencoe muito!`)}
@@ -313,18 +313,4 @@ function segmentLabel(type: LeadershipSegment["type"]) {
   if (type === "departamento") return "Departamento";
   if (type === "grupo-familiar") return "Grupo Familiar";
   return "Atribuicao direta";
-}
-
-function formatBirthdayForLeader(date?: string | null) {
-  if (!date) return "-";
-  const birthday = new Date(date);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const currentBirthday = new Date(now.getFullYear(), birthday.getUTCMonth(), birthday.getUTCDate());
-  if (currentBirthday < today) currentBirthday.setFullYear(now.getFullYear() + 1);
-
-  const day = String(currentBirthday.getDate()).padStart(2, "0");
-  const month = String(currentBirthday.getMonth() + 1).padStart(2, "0");
-  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(currentBirthday);
-  return `${day}/${month} - ${weekday}`;
 }

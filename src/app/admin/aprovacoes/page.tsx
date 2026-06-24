@@ -43,6 +43,8 @@ function mergePersonData(existing: Person, pending: Person, status: PersonStatus
     phone: textOrCurrent(pending.phone, existing.phone) ?? existing.phone,
     email: textOrCurrent(pending.email, existing.email),
     birth_date: textOrCurrent(pending.birth_date, existing.birth_date),
+    birth_day: existing.birth_day ?? pending.birth_day,
+    birth_month: existing.birth_month ?? pending.birth_month,
     hide_birth_year: Boolean(existing.hide_birth_year || pending.hide_birth_year),
     birth_city: textOrCurrent(pending.birth_city, existing.birth_city),
     marital_status: textOrCurrent(pending.marital_status, existing.marital_status),
