@@ -71,9 +71,14 @@ export default function PeoplePage() {
       if (missingFilter === "sem_cidade") return !person.birth_city?.trim();
       if (missingFilter === "sem_batismo") return !person.is_baptized && !person.baptism_date && !person.baptism_church;
       const getAge = (p: typeof person) => {
-        const d = p.birth_date ? new Date(p.birth_date) : null;
-        if (!d) return null;
-        return new Date().getFullYear() - d.getFullYear();
+        if (!p.birth_date) return null;
+        const d = new Date(p.birth_date);
+        if (isNaN(d.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - d.getFullYear();
+        const m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+        return age;
       };
       if (missingFilter === "criancas") { const a = getAge(person); return a !== null && a <= 12; }
       if (missingFilter === "jovens") { const a = getAge(person); return a !== null && a >= 13 && a <= 25; }
