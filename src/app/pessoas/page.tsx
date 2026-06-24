@@ -38,7 +38,7 @@ export default function PeoplePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const filtro = params.get("filtro") ?? "";
-    const demograficos = ["criancas","jovens","adultos","idosos","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"];
+    const demograficos = ["criancas","jovens","adultos","idosos","nao_informado_idade","casado","solteiro","batizados","com_gf","gender_m","gender_f","gender_none","sem_estado_civil"];
     if (demograficos.includes(filtro)) {
       setMissingFilter(filtro);
     } else {
