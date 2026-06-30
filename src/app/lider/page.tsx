@@ -24,6 +24,7 @@ export default function LiderHomePage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [allPeople, setAllPeople] = useState<Person[]>([]);
   const [birthdayPeople, setBirthdayPeople] = useState<Person[]>([]);
+  const [segmentDirectory, setSegmentDirectory] = useState<Record<string, Person[]>>({});
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +32,18 @@ export default function LiderHomePage() {
   useEffect(() => {
     async function load() {
       if (!supabase || !membrosDb) return;
+      const db = membrosDb;
       const ctx = await getAccessContext();
       setAccess(ctx);
+
+      const directoryTargets = Array.from(new Map([
+        ...(ctx.person?.departments ?? []).map((name) => ({ type: "departamento", name })),
+        ...(ctx.person?.family_group ? [{ type: "grupo-familiar", name: ctx.person.family_group }] : []),
+        ...ctx.scopes.map((scope) => ({
+          type: scope.scope_type === "grupo_familiar" ? "grupo-familiar" : "departamento",
+          name: scope.scope_value
+        }))
+      ].map((target) => [`${target.type}:${target.name}`, target])).values());
 
       const [peopleResult, tasksResult, assignmentsResult, birthdayResult] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
@@ -45,6 +56,13 @@ export default function LiderHomePage() {
       const filtered = filterPeopleByAccess(allPeopleData, ctx);
       setAllPeople(allPeopleData);
       setBirthdayPeople((birthdayResult.data ?? []) as Person[]);
+      const directoryResults = await Promise.all(
+        directoryTargets.map(async (target) => {
+          const { data } = await db.rpc("segment_directory", { p_type: target.type, p_name: target.name });
+          return [`${target.type}:${target.name}`, (data ?? []) as Person[]] as const;
+        })
+      );
+      setSegmentDirectory(Object.fromEntries(directoryResults));
       setPeople(filtered);
       setDepartmentAssignments((assignmentsResult.data ?? []) as DepartmentAssignment[]);
 
@@ -98,8 +116,9 @@ export default function LiderHomePage() {
                 <div>
                   <p className="text-sm font-semibold text-ink">{segment.title}</p>
                   <p className="text-xs text-ink/60">{segmentLabel(segment.type)}</p>
+                  <SegmentNames people={segmentDirectory[`${segment.type}:${segment.title}`] ?? []} />
                 </div>
-                <Badge>{segment.count}</Badge>
+                <Badge>{segmentDirectory[`${segment.type}:${segment.title}`]?.length ?? segment.count}</Badge>
               </Link>
             ))}
             {leadershipSegments.length === 0 ? <p className="text-sm text-ink/60">Nenhum grupo ou departamento atribuido como lider.</p> : null}
@@ -120,8 +139,9 @@ export default function LiderHomePage() {
                     <div>
                       <p className="text-sm font-semibold text-ink">{deptName}</p>
                       <p className="text-xs text-ink/60">Participante</p>
+                      <SegmentNames people={segmentDirectory[`departamento:${deptName}`] ?? []} />
                     </div>
-                    <Badge>{count}</Badge>
+                    <Badge>{segmentDirectory[`departamento:${deptName}`]?.length ?? count}</Badge>
                   </Link>
                 );
               })}
@@ -143,8 +163,9 @@ export default function LiderHomePage() {
                     <div>
                       <p className="text-sm font-semibold text-ink">{groupName}</p>
                       <p className="text-xs text-ink/60">Grupo Familiar</p>
+                      <SegmentNames people={segmentDirectory[`grupo-familiar:${groupName}`] ?? []} />
                     </div>
-                    <Badge>{count}</Badge>
+                    <Badge>{segmentDirectory[`grupo-familiar:${groupName}`]?.length ?? count}</Badge>
                   </Link>
                 );
               })}
@@ -155,10 +176,14 @@ export default function LiderHomePage() {
         {access?.person?.family_group ? (
           <Card>
             <h3 className="mb-3 font-semibold">Meu Grupo Familiar</h3>
-            <div className="rounded-md border border-line px-3 py-2.5">
-              <p className="text-sm font-semibold text-ink">{access.person.family_group}</p>
-              <p className="mt-1 text-xs text-ink/60">Lider: {access.person.family_group_leader || "Nao informado"}</p>
-            </div>
+            <Link href={`/segmentos/grupo-familiar/${encodeURIComponent(access.person.family_group)}`} className="flex items-center justify-between rounded-md border border-line px-3 py-2.5 hover:bg-sage">
+              <div>
+                <p className="text-sm font-semibold text-ink">{access.person.family_group}</p>
+                <p className="mt-1 text-xs text-ink/60">Lider: {access.person.family_group_leader || "Nao informado"}</p>
+                <SegmentNames people={segmentDirectory[`grupo-familiar:${access.person.family_group}`] ?? []} />
+              </div>
+              <Badge>{segmentDirectory[`grupo-familiar:${access.person.family_group}`]?.length ?? 0}</Badge>
+            </Link>
           </Card>
         ) : null}
 
@@ -316,4 +341,11 @@ function segmentLabel(type: LeadershipSegment["type"]) {
   if (type === "departamento") return "Departamento";
   if (type === "grupo-familiar") return "Grupo Familiar";
   return "Atribuicao direta";
+}
+
+function SegmentNames({ people }: { people: Person[] }) {
+  if (people.length === 0) return null;
+  const visibleNames = people.slice(0, 3).map((person) => person.preferred_name || person.name).join(", ");
+  const remaining = people.length - 3;
+  return <p className="mt-1 text-xs text-ink/55">{visibleNames}{remaining > 0 ? ` e mais ${remaining}` : ""}</p>;
 }
