@@ -21,12 +21,33 @@ export default function MembroHomePage() {
       const ctx = await getAccessContext();
       setAccess(ctx);
       if (ctx.person?.id && membrosDb) {
-        const [{ data }, { data: allPeopleData }] = await Promise.all([
-          membrosDb.from("people").select("*").eq("id", ctx.person.id).maybeSingle(),
-          membrosDb.from("people").select("id, name, preferred_name, phone, birth_date, birth_day, birth_month, departments, family_group")
-        ]);
-        setPerson(data as Person | null);
-        setAllPeople((allPeopleData ?? []) as Person[]);
+        const db = membrosDb;
+        const { data } = await db.from("people").select("*").eq("id", ctx.person.id).maybeSingle();
+        const ownPerson = data as Person | null;
+        setPerson(ownPerson);
+
+        if (ownPerson) {
+          const segmentRequests = [
+            ...(ownPerson.departments ?? []).map((department) =>
+              db.rpc("segment_directory", { p_type: "departamento", p_name: department })
+            ),
+            ...(ownPerson.family_group
+              ? [db.rpc("segment_directory", { p_type: "grupo-familiar", p_name: ownPerson.family_group })]
+              : [])
+          ];
+          const [{ data: birthdayData }, { data: pastoralData }, ...segmentResults] = await Promise.all([
+            db.rpc("birthday_directory"),
+            db.rpc("pastoral_contacts"),
+            ...segmentRequests
+          ]);
+          const directoryPeople = [
+            ownPerson,
+            ...((birthdayData ?? []) as Person[]),
+            ...((pastoralData ?? []) as Person[]),
+            ...segmentResults.flatMap((result) => (result.data ?? []) as Person[])
+          ];
+          setAllPeople(Array.from(new Map(directoryPeople.map((item) => [item.id, item])).values()));
+        }
       }
       setLoading(false);
     }

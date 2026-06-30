@@ -23,6 +23,7 @@ export default function LiderHomePage() {
   const [access, setAccess] = useState<AccessContext | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [allPeople, setAllPeople] = useState<Person[]>([]);
+  const [birthdayPeople, setBirthdayPeople] = useState<Person[]>([]);
   const [departmentAssignments, setDepartmentAssignments] = useState<DepartmentAssignment[]>([]);
   const [tasks, setTasks] = useState<PastoralTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,15 +34,17 @@ export default function LiderHomePage() {
       const ctx = await getAccessContext();
       setAccess(ctx);
 
-      const [peopleResult, tasksResult, assignmentsResult] = await Promise.all([
+      const [peopleResult, tasksResult, assignmentsResult, birthdayResult] = await Promise.all([
         membrosDb.from("people").select("*").order("name"),
         membrosDb.from("pastoral_tasks").select("*, people(name, phone)").eq("status", "pendente").order("due_date"),
-        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("role", "lider")
+        membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("role", "lider"),
+        membrosDb.rpc("birthday_directory")
       ]);
 
       const allPeopleData = (peopleResult.data ?? []) as Person[];
       const filtered = filterPeopleByAccess(allPeopleData, ctx);
       setAllPeople(allPeopleData);
+      setBirthdayPeople((birthdayResult.data ?? []) as Person[]);
       setPeople(filtered);
       setDepartmentAssignments((assignmentsResult.data ?? []) as DepartmentAssignment[]);
 
@@ -56,7 +59,7 @@ export default function LiderHomePage() {
 
   if (loading) return <PageShell><p className="text-sm text-ink/60">Carregando...</p></PageShell>;
 
-  const birthdays = allPeople.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
+  const birthdays = birthdayPeople.filter((person) => isBirthdayThisWeek(person.birth_date, person.birth_day, person.birth_month));
   const leaderName = access?.person?.preferred_name || access?.person?.name || "Lider";
   const familyGroup = access?.person?.family_group || "Sem grupo familiar cadastrado";
   const leadershipSegments = buildLeadershipSegments(access, people, allPeople, departmentAssignments);

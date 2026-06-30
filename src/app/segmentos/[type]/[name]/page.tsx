@@ -39,7 +39,7 @@ export default function SegmentPage({ params }: PageProps) {
       if (!supabase || !membrosDb || !name) return;
       const accessContext = await getAccessContext();
       const [{ data }, { data: departmentData }, { data: familyGroupData }] = await Promise.all([
-        membrosDb.from("people").select("*").order("name"),
+        membrosDb.rpc("segment_directory", { p_type: type, p_name: name }),
         type === "departamento" ? membrosDb.from("department_assignments").select("*, people(id, name, preferred_name, phone)").eq("department_name", name) : Promise.resolve({ data: [] }),
         type === "grupo-familiar" ? membrosDb.from("family_group_assignments").select("*, people(id, name, preferred_name, phone)").eq("family_group", name) : Promise.resolve({ data: [] })
       ]);
@@ -61,7 +61,7 @@ export default function SegmentPage({ params }: PageProps) {
       } else {
         setLeaderPeople([]);
       }
-      setPeople(allPeopleData.filter((person) => belongsToSegment(person, type, name)));
+      setPeople(allPeopleData);
     }
 
     loadPeople();
@@ -183,13 +183,6 @@ export default function SegmentPage({ params }: PageProps) {
       </Card>
     </PageShell>
   );
-}
-
-function belongsToSegment(person: Person, type: string, name: string) {
-  if (type === "departamento") return person.departments?.includes(name);
-  if (type === "grupo-familiar") return person.family_group === name;
-  if (type === "atribuicao") return person.assigned_leader === name;
-  return false;
 }
 
 function findLeader(type: string, name: string, people: Person[], departmentAssignments: DepartmentAssignment[], familyGroupAssignments: FamilyGroupAssignment[], allPeople: Person[]) {

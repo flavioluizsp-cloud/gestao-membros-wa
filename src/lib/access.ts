@@ -16,16 +16,9 @@ export async function getAccessContext(): Promise<AccessContext> {
 
   const profile = profileData as UserProfile | null;
 
-  // Bootstrap: before the first permission profile exists, the logged user can manage the system.
+  // An authenticated account without an explicit profile has no application access.
   if (!profile) {
-    return {
-      profile: null,
-      scopes: [],
-      person: null,
-      isAdminLike: true,
-      isLeader: false,
-      isMember: false
-    };
+    return emptyAccess();
   }
 
   const [{ data: scopesData }, { data: personData }] = await Promise.all([
